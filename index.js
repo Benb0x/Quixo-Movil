@@ -83,12 +83,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         reiniciarJuego() {
-            // Restablecer la secuencia y el estado inicial
             this.limpiarEstado();
             this.secuencia = this.generarSecuenciaAleatoria(20); // Genera una secuencia aleatoria de 20 colores
             this.rondaActual = 0;
             this.posicionUsuario = 0;
-            this.botonesBloqueados = false;
+            this.botonesBloqueados = true;
             this.display.estadoJuego.textContent = ''; // Limpiar mensajes previos
             this.display.estadoJuego.style.color = '#4682B4'; 
             this.display.botonEmpezar.disabled = true; // Desactivar botón de nuevo hasta que se termine la secuencia
@@ -97,12 +96,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         limpiarEstado() {
-            clearTimeout(this.inactividadTimeout);
+            clearTimeout(this.inactividadTimeout); // Limpia cualquier temporizador anterior
             this.botonesBloqueados = true;
             this.posicionUsuario = 0;
             this.rondaActual = 0;
 
-            // Restablecer colores de los botones
             this.botones.forEach(boton => {
                 boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
             });
@@ -115,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         validarColorElegido(indice) {
-            clearTimeout(this.inactividadTimeout);
+            clearTimeout(this.inactividadTimeout); // Reinicia el temporizador de inactividad
 
             if (this.secuencia[this.posicionUsuario] === indice) {
                 this.alternarEstiloBoton(this.botones[indice], true);
@@ -139,10 +137,17 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 this.perderJuego();
             }
+
+            // Reinicia el temporizador después de cada clic correcto del usuario
+            this.inactividadTimeout = setTimeout(() => {
+                this.perderJuego();
+            }, 5000);
         }
 
         mostrarSecuencia() {
             this.botonesBloqueados = true;
+            clearTimeout(this.inactividadTimeout); // Limpia cualquier temporizador antes de iniciar la secuencia
+
             let indiceSecuencia = 0;
 
             const secuenciaInterval = setInterval(() => {
@@ -157,6 +162,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearInterval(secuenciaInterval);
                     this.botonesBloqueados = false;
                     this.posicionUsuario = 0;
+
+                    // Iniciar el temporizador solo después de que termine de mostrar la secuencia
+                    this.inactividadTimeout = setTimeout(() => {
+                        this.perderJuego();
+                    }, 5000);
                 }
             }, this.velocidad);
         }
@@ -180,6 +190,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         perderJuego() {
+            clearTimeout(this.inactividadTimeout); // Limpia el temporizador de inactividad
             this.limpiarEstado();
             this.display.estadoJuego.textContent = 'Perdiste. Intenta de nuevo.';
             this.display.estadoJuego.style.color = 'red';
