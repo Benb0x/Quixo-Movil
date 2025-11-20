@@ -4,8 +4,8 @@
 .circuloInteractivo {
     background: #312E2E;
     width: 100%;
-    max-width: 320px;        /* ancho máximo en móviles */
-    padding: 16px 12px 24px; /* espacio arriba / lados / abajo */
+    max-width: 300px;        /* ancho máximo en móviles */
+    padding: 12px 12px 12px; /* espacio arriba / lados / abajo */
     border-radius: 9999px;   /* lo hace ovalado, no círculo perfecto */
     display: flex;
     justify-content: center;
@@ -59,4 +59,12 @@
     }
     
     
+}
+
+.contenedorJuego {
+    margin-bottom: 22px;  
+}
+
+.botonComenzar {
+    margin-top: 13px;   
 }
