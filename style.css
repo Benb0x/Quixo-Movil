@@ -1,3 +1,62 @@
 #caraCentro, #caraInferiorD, #caraInferiorI{
     fill:#E7E1E1
 }
+.circuloInteractivo {
+    background: #312E2E;
+    width: 100%;
+    max-width: 300px;        /* ancho máximo en móviles */
+    padding: 16px 12px 12px; /* espacio arriba / lados / abajo */
+    border-radius: 9999px;   /* lo hace ovalado, no círculo perfecto */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    overflow: visible;       /* NO recortes nada del SVG */
+}
+
+
+/* Contenedor del SVG */
+.lineasQuixo {
+    width: 70%;
+    height: auto;
+}
+
+/* SVG responsivo */
+.svg-responsive {
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+/* Pantallas MUY pequeñas (iPhone SE 2/3, iPhone 6/7/8) */
+@media (max-width: 375px) {
+    .lineasQuixo {
+        width: 55%;
+    }
+    
+    
+}
+
+/* Pantallas ULTRA pequeñas (iPhone SE 1ra gen, iPhone 5) */
+@media (max-width: 320px) {
+    .lineasQuixo {
+        width: 50%;
+    }
+   
+}
+
+/* Pantallas medianas (iPhone 12, 13, 14, 15, 16) */
+@media (min-width: 376px) and (max-width: 430px) {
+    .lineasQuixo {
+        width: 65%;
+    }
+}
+
+/* Pantallas grandes (iPhone Plus, Pro Max) */
+@media (min-width: 431px) {
+    .lineasQuixo {
+        width: 70%;
+    }
+    
+    
+}
