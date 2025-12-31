@@ -28,11 +28,11 @@ document.addEventListener('DOMContentLoaded', function () {
             this.rondaActual = 0;
             this.posicionUsuario = 0;
             this.secuencia = [];
-            this.velocidad = 800;
+            this.velocidad = 900; // un poco más lento para que se vea claro
             this.botonesBloqueados = true;
             this.sonidosBoton = [];
             this.inactividadTimeout = null;
-            this.mostrandoSecuencia = false; // ← BANDERA
+            this.mostrandoSecuencia = false;
 
             this.display = {
                 botonEmpezar,
@@ -46,10 +46,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         cargarSonidos() {
             const sonidos = [
-                'https://quixo-sonidos.vercel.app/sounds_1.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_2.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_3.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_4.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_1.m4a',  // ojos
+                'https://quixo-sonidos.vercel.app/sounds_2.m4a',  // bigote
+                'https://quixo-sonidos.vercel.app/sounds_3.m4a',  // cascoS
+                'https://quixo-sonidos.vercel.app/sounds_4.m4a',  // cascoI
                 'https://quixo-sonidos.vercel.app/sounds_error.m4a',
                 'https://quixo-sonidos.vercel.app/win.m4a'
             ];
@@ -104,34 +104,32 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         reiniciarJuego() {
-            this.limpiarEstado();
+            this.limpiarEstadoVisual();
+            clearTimeout(this.inactividadTimeout);
+            this.mostrandoSecuencia = false;
+
             this.secuencia = this.generarSecuenciaAleatoria(20);
             this.rondaActual = 0;
             this.posicionUsuario = 0;
             this.botonesBloqueados = true;
-            this.mostrandoSecuencia = false;
+
             this.display.estadoJuego.textContent = '';
             this.display.estadoJuego.style.color = '#4682B4'; 
             this.display.botonEmpezar.disabled = true;
             this.actualizarEstado("¡Vamos a empezar!", 0);
+
             this.mostrarSecuencia();
         }
 
-        limpiarEstado() {
-            clearTimeout(this.inactividadTimeout);
-            this.botonesBloqueados = true;
-            this.posicionUsuario = 0;
-            this.rondaActual = 0;
-            this.mostrandoSecuencia = false;
-
+        limpiarEstadoVisual() {
             this.botones.forEach(boton => {
                 boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
             });
         }
 
-        actualizarEstado(mensaje, ronda) {
+        actualizarEstado(mensaje, rondaNum) {
             const mensajePositivo = mensajesPositivos[Math.floor(Math.random() * mensajesPositivos.length)];
-            this.display.estadoJuego.textContent = `${mensajePositivo} Siguiente ronda: ${ronda + 1}`;
+            this.display.estadoJuego.textContent = `${mensajePositivo} Siguiente ronda: ${rondaNum + 1}`;
             this.display.estadoJuego.style.display = 'block';
         }
 
@@ -139,26 +137,26 @@ document.addEventListener('DOMContentLoaded', function () {
             clearTimeout(this.inactividadTimeout);
 
             if (this.secuencia[this.posicionUsuario] === indice) {
+                // feedback visual y sonoro al usuario
                 this.alternarEstiloBoton(this.botones[indice], true);
                 this.reproducirSonido(indice);
 
                 setTimeout(() => {
                     this.alternarEstiloBoton(this.botones[indice], false);
-                }, this.velocidad / 2);
+                }, this.velocidad * 0.8);
 
                 this.posicionUsuario++;
 
+                // avance de ronda
                 if (this.posicionUsuario > this.rondaActual) {
                     this.rondaActual++;
                     if (this.rondaActual < this.secuencia.length) {
                         this.actualizarEstado("¡Muy bien!", this.rondaActual);
-                        
                         this.botonesBloqueados = true;
-                        
+
+                        // importante: solo llamar una vez a mostrarSecuencia
                         setTimeout(() => {
-                            if (!this.mostrandoSecuencia) {
-                                this.mostrarSecuencia();
-                            }
+                            this.mostrarSecuencia();
                         }, this.velocidad);
                     } else {
                         this.ganarJuego();
@@ -175,25 +173,29 @@ document.addEventListener('DOMContentLoaded', function () {
 
         async mostrarSecuencia() {
             if (this.mostrandoSecuencia) {
-                return;
+                return; // evitar duplicados
             }
-
             this.mostrandoSecuencia = true;
             this.botonesBloqueados = true;
             clearTimeout(this.inactividadTimeout);
 
-            const tiempoEncendido = this.velocidad * 0.6;
-            const tiempoEntrePasos = this.velocidad * 0.4;
+            // siempre empezamos con todo apagado
+            this.limpiarEstadoVisual();
+
+            const tiempoEncendido = this.velocidad * 0.9;  // 90% encendido
+            const tiempoEntrePasos = this.velocidad * 0.3; // 30% pausa
 
             for (let i = 0; i <= this.rondaActual; i++) {
                 const indiceColor = this.secuencia[i];
                 const boton = this.botones[indiceColor];
 
+                // encender solo este
                 this.alternarEstiloBoton(boton, true);
                 this.reproducirSonido(indiceColor);
 
                 await this.sleep(tiempoEncendido);
 
+                // apagarlo
                 this.alternarEstiloBoton(boton, false);
 
                 if (i < this.rondaActual) {
@@ -230,7 +232,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
         perderJuego() {
             clearTimeout(this.inactividadTimeout);
-            this.limpiarEstado();
+            this.mostrandoSecuencia = false;
+            this.botonesBloqueados = true;
+
+            this.limpiarEstadoVisual();
             this.display.estadoJuego.textContent = 'Perdiste. Intenta de nuevo.';
             this.display.estadoJuego.style.color = 'red';
             this.display.ronda.style.display = 'none';
@@ -239,7 +244,11 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         ganarJuego() {
-            this.limpiarEstado();
+            clearTimeout(this.inactividadTimeout);
+            this.mostrandoSecuencia = false;
+            this.botonesBloqueados = true;
+
+            this.limpiarEstadoVisual();
         
             if (window.innerWidth <= 375) {
                 this.display.estadoJuego.innerHTML = '¡F E L I C I D A D E S<br>G A N A S T E!';
