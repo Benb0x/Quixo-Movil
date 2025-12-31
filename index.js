@@ -22,14 +22,10 @@ document.addEventListener('DOMContentLoaded', function () {
             this.rondaActual = 0;
             this.posicionUsuario = 0;
             this.secuencia = []; // Secuencia será aleatoria ahora
-            this.velocidad = 1000; // MÁS TIEMPO ENTRE PASOS
+            this.velocidad = 700;
             this.botonesBloqueados = true;
             this.sonidosBoton = [];
             this.inactividadTimeout = null;
-
-            // NUEVOS CAMPOS PARA CONTROL ESTRICTO DE LA SECUENCIA
-            this.mostrandoSecuencia = false;
-            this.intervaloSecuencia = null;
 
             this.display = {
                 botonEmpezar,
@@ -60,10 +56,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         iniciar() {
-            // IMPORTANTE: solo un listener y deshabilitar tan pronto se clickea
             this.display.botonEmpezar.addEventListener('click', () => {
-                this.display.botonEmpezar.disabled = true; // deshabilitar INMEDIATAMENTE
-                this.reiniciarJuego();
+                this.reiniciarJuego(); // Llamamos a la función de reinicio aquí
             });
 
             this.botones = Array.from(botonesJuego);
@@ -96,21 +90,13 @@ document.addEventListener('DOMContentLoaded', function () {
             this.botonesBloqueados = true;
             this.display.estadoJuego.textContent = ''; // Limpiar mensajes previos
             this.display.estadoJuego.style.color = '#4682B4'; 
-            // botón ya se deshabilita en iniciar()
+            this.display.botonEmpezar.disabled = true; // Desactivar botón de nuevo hasta que se termine la secuencia
             this.actualizarEstado("¡Vamos a empezar!", 0);
             this.mostrarSecuencia();
         }
 
         limpiarEstado() {
             clearTimeout(this.inactividadTimeout); // Limpia cualquier temporizador anterior
-
-            // LIMPIAR CUALQUIER SECUENCIA QUE ESTÉ CORRIENDO
-            if (this.intervaloSecuencia) {
-                clearInterval(this.intervaloSecuencia);
-                this.intervaloSecuencia = null;
-            }
-            this.mostrandoSecuencia = false;
-
             this.botonesBloqueados = true;
             this.posicionUsuario = 0;
             this.rondaActual = 0;
@@ -143,16 +129,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.rondaActual++;
                     if (this.rondaActual < this.secuencia.length) {
                         this.actualizarEstado("¡Muy bien!", this.rondaActual);
-
-                        // BLOQUEAR SIEMPRE ANTES DE LA SIGUIENTE SECUENCIA
-                        this.botonesBloqueados = true;
-
-                        setTimeout(() => {
-                            // NO EMPEZAR OTRA SI YA HAY UNA EN CURSO
-                            if (!this.mostrandoSecuencia) {
-                                this.mostrarSecuencia();
-                            }
-                        }, this.velocidad);
+                        setTimeout(() => this.mostrarSecuencia(), this.velocidad);
                     } else {
                         this.ganarJuego();
                     }
@@ -168,53 +145,23 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         mostrarSecuencia() {
-            // SI YA HAY UNA SECUENCIA MOSTRÁNDOSE, SALIR
-            if (this.mostrandoSecuencia) {
-                return;
-            }
-
-            this.mostrandoSecuencia = true;
             this.botonesBloqueados = true;
             clearTimeout(this.inactividadTimeout); // Limpia cualquier temporizador antes de iniciar la secuencia
 
             let indiceSecuencia = 0;
 
-            // POR SI QUEDÓ ALGÚN INTERVALO VIEJO
-            if (this.intervaloSecuencia) {
-                clearInterval(this.intervaloSecuencia);
-                this.intervaloSecuencia = null;
-            }
-
-            // APAGAR TODO ANTES DE EMPEZAR
-            this.botones.forEach(boton => {
-                boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
-            });
-
-            this.intervaloSecuencia = setInterval(() => {
-                // Apagar el botón anterior
+            const secuenciaInterval = setInterval(() => {
                 if (indiceSecuencia > 0) {
                     this.alternarEstiloBoton(this.botones[this.secuencia[indiceSecuencia - 1]], false);
                 }
-
                 if (indiceSecuencia <= this.rondaActual) {
-                    const indiceColor = this.secuencia[indiceSecuencia];
-
-                    // Encender el actual
-                    this.alternarEstiloBoton(this.botones[indiceColor], true);
-                    this.reproducirSonido(indiceColor);
-
+                    this.alternarEstiloBoton(this.botones[this.secuencia[indiceSecuencia]], true);
+                    this.reproducirSonido(this.secuencia[indiceSecuencia]);
                     indiceSecuencia++;
                 } else {
-                    clearInterval(this.intervaloSecuencia);
-                    this.intervaloSecuencia = null;
-
-                    // APAGAR EL ÚLTIMO BOTÓN DE LA RONDA
-                    const ultimoIndice = this.secuencia[this.rondaActual];
-                    this.alternarEstiloBoton(this.botones[ultimoIndice], false);
-
+                    clearInterval(secuenciaInterval);
                     this.botonesBloqueados = false;
                     this.posicionUsuario = 0;
-                    this.mostrandoSecuencia = false;
 
                     // Iniciar el temporizador solo después de que termine de mostrar la secuencia
                     this.inactividadTimeout = setTimeout(() => {
@@ -258,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (window.innerWidth <= 375) {
                 this.display.estadoJuego.innerHTML = '¡F E L I C I D A D E S<br>G A N A S T E!';
             } else {
-                // aquí puedes poner otro mensaje si quieres
+                
             }
         
             this.display.ronda.style.display = 'none';
