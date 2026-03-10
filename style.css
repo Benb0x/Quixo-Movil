@@ -68,3 +68,7 @@
 .botonComenzar {
     margin-top: 13px;   
 }
+@keyframes saltarLetra {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+}

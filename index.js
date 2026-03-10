@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const mensajesPositivos = ["¡Bien hecho!", "¡Excelente!", "¡Sigue así!", "¡Muy bien!", "¡Continúa!"];
 
-    // Solo reproduce un sonido para pedir permiso, separado del juego
     acceptAudioButton.addEventListener('click', function () {
         const audio = new Audio('https://quixo-sonidos.vercel.app/sounds_1.m4a');
         audio.play().then(() => {
@@ -22,13 +21,13 @@ document.addEventListener('DOMContentLoaded', function () {
         constructor() {
             this.rondaActual = 0;
             this.posicionUsuario = 0;
-            this.secuencia = []; // Secuencia será aleatoria ahora
-            this.velocidad = 1000; // MÁS TIEMPO ENTRE PASOS / ILUMINACIÓN
+            this.secuencia = [];
+            this.velocidad = 1000;
             this.botonesBloqueados = true;
             this.sonidosBoton = [];
             this.inactividadTimeout = null;
+            this.juegoTerminado = false; // BANDERA PARA EVITAR perderJuego() después de ganar
 
-            // Control estricto de secuencia
             this.mostrandoSecuencia = false;
             this.intervaloSecuencia = null;
 
@@ -55,13 +54,12 @@ document.addEventListener('DOMContentLoaded', function () {
             sonidos.forEach((sonido, indice) => {
                 const audio = new Audio(sonido);
                 audio.preload = "auto";
-                audio.crossOrigin = 'anonymous'; 
+                audio.crossOrigin = 'anonymous';
                 this.sonidosBoton[indice] = audio;
             });
         }
 
         iniciar() {
-            // IMPORTANTE: deshabilitar el botón apenas se clickea para evitar doble inicio
             this.display.botonEmpezar.addEventListener('click', () => {
                 this.display.botonEmpezar.disabled = true;
                 this.reiniciarJuego();
@@ -72,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
 
                 boton.addEventListener('click', (event) => {
-                    // Doble seguridad: no clicks si los botones están bloqueados o si se está mostrando secuencia
                     if (!this.botonesBloqueados && !this.mostrandoSecuencia) {
                         const indice = this.botones.indexOf(event.currentTarget);
                         this.validarColorElegido(indice);
@@ -84,30 +81,29 @@ document.addEventListener('DOMContentLoaded', function () {
         generarSecuenciaAleatoria(longitud) {
             const secuencia = [];
             for (let i = 0; i < longitud; i++) {
-                const colorAleatorio = Math.floor(Math.random() * 4); // Genera un número entre 0 y 3
+                const colorAleatorio = Math.floor(Math.random() * 4);
                 secuencia.push(colorAleatorio);
             }
             return secuencia;
         }
 
         reiniciarJuego() {
+            this.juegoTerminado = false; // RESETEAR BANDERA AL INICIAR
             this.limpiarEstado();
-            this.secuencia = this.generarSecuenciaAleatoria(20); // Genera una secuencia aleatoria de 20 colores
+            this.secuencia = this.generarSecuenciaAleatoria(10);
             this.rondaActual = 0;
             this.posicionUsuario = 0;
             this.botonesBloqueados = true;
             this.mostrandoSecuencia = false;
-            this.display.estadoJuego.textContent = ''; // Limpiar mensajes previos
-            this.display.estadoJuego.style.color = '#4682B4'; 
-            // botonEmpezar ya está deshabilitado en iniciar()
+            this.display.estadoJuego.textContent = '';
+            this.display.estadoJuego.style.color = '#4682B4';
             this.actualizarEstado("¡Vamos a empezar!", 0);
             this.mostrarSecuencia();
         }
 
         limpiarEstado() {
-            clearTimeout(this.inactividadTimeout); // Limpia cualquier temporizador anterior
+            clearTimeout(this.inactividadTimeout);
 
-            // LIMPIAR CUALQUIER INTERVALO DE SECUENCIA VIEJO
             if (this.intervaloSecuencia) {
                 clearInterval(this.intervaloSecuencia);
                 this.intervaloSecuencia = null;
@@ -118,7 +114,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.posicionUsuario = 0;
             this.rondaActual = 0;
 
-            // Apagar todos los botones
             if (this.botones) {
                 this.botones.forEach(boton => {
                     boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
@@ -133,7 +128,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         validarColorElegido(indice) {
-            clearTimeout(this.inactividadTimeout); // Reinicia el temporizador de inactividad
+            clearTimeout(this.inactividadTimeout);
 
             if (this.secuencia[this.posicionUsuario] === indice) {
                 this.alternarEstiloBoton(this.botones[indice], true);
@@ -149,55 +144,50 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.rondaActual++;
                     if (this.rondaActual < this.secuencia.length) {
                         this.actualizarEstado("¡Muy bien!", this.rondaActual);
-
-                        // BLOQUEAR botones antes de empezar a mostrar la siguiente ronda
                         this.botonesBloqueados = true;
 
                         setTimeout(() => {
-                            // No empezar otra si ya hay una en curso
                             if (!this.mostrandoSecuencia) {
                                 this.mostrarSecuencia();
                             }
                         }, this.velocidad);
                     } else {
                         this.ganarJuego();
+                        return; // SALIR INMEDIATAMENTE, no ejecutar el temporizador de abajo
                     }
                 }
             } else {
                 this.perderJuego();
+                return; // SALIR INMEDIATAMENTE
             }
 
-            // Reinicia el temporizador después de cada clic correcto del usuario
-            this.inactividadTimeout = setTimeout(() => {
-                this.perderJuego();
-            }, 5000);
+            // Solo reactivar el temporizador si el juego sigue en curso
+            if (!this.juegoTerminado) {
+                this.inactividadTimeout = setTimeout(() => {
+                    this.perderJuego();
+                }, 5000);
+            }
         }
 
         mostrarSecuencia() {
-            // SI YA HAY UNA SECUENCIA CORRIENDO, NO HACER NADA
-            if (this.mostrandoSecuencia) {
-                return;
-            }
+            if (this.mostrandoSecuencia) return;
 
             this.mostrandoSecuencia = true;
             this.botonesBloqueados = true;
-            clearTimeout(this.inactividadTimeout); // Limpia cualquier temporizador antes de iniciar la secuencia
+            clearTimeout(this.inactividadTimeout);
 
             let indiceSecuencia = 0;
 
-            // Limpiar cualquier intervalo viejo por seguridad
             if (this.intervaloSecuencia) {
                 clearInterval(this.intervaloSecuencia);
                 this.intervaloSecuencia = null;
             }
 
-            // APAGAR TODOS LOS BOTONES ANTES DE EMPEZAR
             this.botones.forEach(boton => {
                 boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
             });
 
             this.intervaloSecuencia = setInterval(() => {
-                // Apagar el botón anterior
                 if (indiceSecuencia > 0) {
                     const anterior = this.secuencia[indiceSecuencia - 1];
                     this.alternarEstiloBoton(this.botones[anterior], false);
@@ -205,18 +195,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (indiceSecuencia <= this.rondaActual) {
                     const indiceColor = this.secuencia[indiceSecuencia];
-
-                    // Encender el actual y sonar
                     this.alternarEstiloBoton(this.botones[indiceColor], true);
                     this.reproducirSonido(indiceColor);
-
                     indiceSecuencia++;
                 } else {
-                    // Termina la secuencia
                     clearInterval(this.intervaloSecuencia);
                     this.intervaloSecuencia = null;
 
-                    // Apagar el último botón de la ronda
                     const ultimoIndice = this.secuencia[this.rondaActual];
                     this.alternarEstiloBoton(this.botones[ultimoIndice], false);
 
@@ -224,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.posicionUsuario = 0;
                     this.mostrandoSecuencia = false;
 
-                    // Iniciar el temporizador solo después de que termine de mostrar la secuencia
                     this.inactividadTimeout = setTimeout(() => {
                         this.perderJuego();
                     }, 5000);
@@ -251,27 +235,43 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         perderJuego() {
-            clearTimeout(this.inactividadTimeout); // Limpia el temporizador de inactividad
+            clearTimeout(this.inactividadTimeout);
             this.limpiarEstado();
             this.display.estadoJuego.textContent = 'Perdiste. Intenta de nuevo.';
             this.display.estadoJuego.style.color = 'red';
             this.display.ronda.style.display = 'none';
             this.reproducirSonido(4);
-            this.display.botonEmpezar.disabled = false; // Reactivar el botón después de perder
+            this.display.botonEmpezar.disabled = false;
         }
 
         ganarJuego() {
+            this.juegoTerminado = true; // BLOQUEAR CUALQUIER perderJuego() posterior
+            clearTimeout(this.inactividadTimeout);
             this.limpiarEstado();
-        
-            if (window.innerWidth <= 375) {
-                this.display.estadoJuego.innerHTML = '¡F E L I C I D A D E S<br>G A N A S T E!';
-            } else {
-                // Aquí podrías poner otro mensaje si quieres en pantallas grandes
-            }
-        
+
+            const texto = "¡FELICIDADES GANASTE!";
+            const colores = ['#FF0000', '#FF7F00', '#FFD700', '#00CC00', '#0000FF', '#8B00FF'];
+
+            this.display.estadoJuego.innerHTML = texto.split('').map((letra, i) => {
+                const color = colores[i % colores.length];
+                return `<span style="color:${color}; font-weight:bold; display:inline-block; animation: saltarLetra 0.5s ease ${i * 0.05}s infinite alternate;">${letra === ' ' ? '&nbsp;' : letra}</span>`;
+            }).join('');
+
             this.display.ronda.style.display = 'none';
             this.reproducirSonido(5);
-            this.display.botonEmpezar.disabled = false; // Reactivar el botón después de ganar
+            this.display.botonEmpezar.disabled = false;
+
+            let rafagasLanzadas = 0;
+            const maxRafagas = 4;
+            const lanzarRafaga = () => {
+                if (rafagasLanzadas < maxRafagas) {
+                    confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0, y: 0.6 } });
+                    confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1, y: 0.6 } });
+                    rafagasLanzadas++;
+                    setTimeout(lanzarRafaga, 1000);
+                }
+            };
+            lanzarRafaga();
         }
     }
 
