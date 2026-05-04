@@ -26,8 +26,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.botonesBloqueados = true;
             this.sonidosBoton = [];
             this.inactividadTimeout = null;
-            this.juegoTerminado = false; // BANDERA PARA EVITAR perderJuego() después de ganar
-
+            this.juegoTerminado = false;
             this.mostrandoSecuencia = false;
             this.intervaloSecuencia = null;
 
@@ -87,10 +86,28 @@ document.addEventListener('DOMContentLoaded', function () {
             return secuencia;
         }
 
-        reiniciarJuego() {
-            this.juegoTerminado = false; // RESETEAR BANDERA AL INICIAR
+       reiniciarJuego() {
+            this.juegoTerminado = false;
             this.limpiarEstado();
-            this.secuencia = this.generarSecuenciaAleatoria(10);
+
+            // ===== LEER NIVEL SELECCIONADO Y AJUSTAR RONDAS =====
+            const botonActivo = document.querySelector('.btn-dificultad.active');
+            const nivel = botonActivo ? botonActivo.getAttribute('data-nivel') : 'facil';
+
+            let longitudTotal = 12; // Valor por defecto
+            if (nivel === 'facil') {
+                this.velocidad = 1000;
+                longitudTotal = 6;  // Para ganar en modo Fácil
+            } else if (nivel === 'medio') {
+                this.velocidad = 700;
+                longitudTotal = 12; // Para ganar en modo Medio
+            } else if (nivel === 'dificil') {
+                this.velocidad = 400;
+                longitudTotal = 15; // Para ganar en modo Difícil
+            }
+            // ====================================================
+
+            this.secuencia = this.generarSecuenciaAleatoria(longitudTotal);
             this.rondaActual = 0;
             this.posicionUsuario = 0;
             this.botonesBloqueados = true;
@@ -109,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.intervaloSecuencia = null;
             }
             this.mostrandoSecuencia = false;
-
             this.botonesBloqueados = true;
             this.posicionUsuario = 0;
             this.rondaActual = 0;
@@ -153,15 +169,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         }, this.velocidad);
                     } else {
                         this.ganarJuego();
-                        return; // SALIR INMEDIATAMENTE, no ejecutar el temporizador de abajo
+                        return;
                     }
                 }
             } else {
                 this.perderJuego();
-                return; // SALIR INMEDIATAMENTE
+                return;
             }
 
-            // Solo reactivar el temporizador si el juego sigue en curso
             if (!this.juegoTerminado) {
                 this.inactividadTimeout = setTimeout(() => {
                     this.perderJuego();
@@ -245,7 +260,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         ganarJuego() {
-            this.juegoTerminado = true; // BLOQUEAR CUALQUIER perderJuego() posterior
+            this.juegoTerminado = true;
             clearTimeout(this.inactividadTimeout);
             this.limpiarEstado();
 
@@ -276,4 +291,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     new Quixo();
-});
+});WD
