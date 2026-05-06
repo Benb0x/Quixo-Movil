@@ -6,47 +6,46 @@ document.addEventListener('DOMContentLoaded', function () {
     const ronda = document.getElementById("ronda");
     const botonesJuego = document.querySelectorAll("#grupoInteractivo use");
 
-    const mensajesPositivos = ["¡Bien hecho!", "¡Excelente!", "¡Sigue así!", "¡Muy bien!", "¡Continúa!"];
+    let nivelSeleccionado = 'facil';
 
-    // Botones de dificultad
-    const botonesDificultad = document.querySelectorAll('.btn-dificultad');
-    botonesDificultad.forEach(btn => {
-        btn.addEventListener('click', function() {
-            botonesDificultad.forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
+    document.querySelectorAll('.nivel-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            nivelSeleccionado = this.getAttribute('data-nivel');
+            const textos = {
+                facil:   '🟢 Fácil — Normal',
+                medio:   '🟡 Medio — Rápido',
+                dificil: '🔴 Difícil — ¡Super Veloz!'
+            };
+            document.getElementById('dropdownNivel').textContent = textos[nivelSeleccionado];
         });
     });
 
     acceptAudioButton.addEventListener('click', function () {
         const audio = new Audio('https://quixo-sonidos.vercel.app/sounds_1.m4a');
-        audio.play().then(() => {
-            audioPermissionModal.style.display = 'none';
-        }).catch(error => {
-            console.error("Error al habilitar el sonido.");
-        });
+        audio.play().then(() => audioPermissionModal.style.display = 'none').catch(e => {});
     });
+
+    const esperar = ms => new Promise(res => setTimeout(res, ms));
 
     class Quixo {
         constructor() {
-            this.rondaActual = 0;
-            this.posicionUsuario = 0;
             this.secuencia = [];
-            this.velocidad = 1000;
-            this.botonesBloqueados = true;
             this.sonidosBoton = [];
+            this.esperandoJugador = false;
+            this.procesandoClic = false;
             this.inactividadTimeout = null;
-            this.juegoTerminado = false;
-            this.mostrandoSecuencia = false;
-            this.intervaloSecuencia = null;
-
-            this.display = { botonEmpezar, ronda, estadoJuego };
+            this.resolverClic = null;
+            this.tiempoEncendido = 350;
+            this.gap = 100;
+            this.tiempoEspera = 8000;
 
             this.cargarSonidos();
             this.iniciar();
         }
 
         cargarSonidos() {
-            const sonidos = [
+            const urls = [
                 'https://quixo-sonidos.vercel.app/sounds_1.m4a',
                 'https://quixo-sonidos.vercel.app/sounds_2.m4a',
                 'https://quixo-sonidos.vercel.app/sounds_3.m4a',
@@ -54,235 +53,189 @@ document.addEventListener('DOMContentLoaded', function () {
                 'https://quixo-sonidos.vercel.app/sounds_error.m4a',
                 'https://quixo-sonidos.vercel.app/win.m4a'
             ];
-            sonidos.forEach((sonido, indice) => {
-                const audio = new Audio(sonido);
-                audio.preload = "auto";
-                audio.crossOrigin = 'anonymous';
-                this.sonidosBoton[indice] = audio;
+            urls.forEach((url, i) => {
+                this.sonidosBoton[i] = new Audio(url);
+                this.sonidosBoton[i].preload = "auto";
             });
         }
 
         iniciar() {
-            this.display.botonEmpezar.addEventListener('click', () => {
-                this.display.botonEmpezar.disabled = true;
-                this.reiniciarJuego();
-            });
-
             this.botones = Array.from(botonesJuego);
-            this.botones.forEach(boton => {
+            this.botones.forEach((boton, i) => {
                 boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
-                boton.addEventListener('click', (event) => {
-                    if (!this.botonesBloqueados && !this.mostrandoSecuencia) {
-                        const indice = this.botones.indexOf(event.currentTarget);
-                        this.validarColorElegido(indice);
+                boton.addEventListener('click', () => {
+                    if (this.esperandoJugador && !this.procesandoClic) {
+                        this.recibirClic(i);
                     }
                 });
             });
-        }
 
-        generarSecuenciaAleatoria(longitud) {
-            const secuencia = [];
-            for (let i = 0; i < longitud; i++) {
-                secuencia.push(Math.floor(Math.random() * 4));
-            }
-            return secuencia;
-        }
-
-        reiniciarJuego() {
-            this.juegoTerminado = false;
-            this.limpiarEstado();
-
-            // Leer nivel seleccionado
-            const botonActivo = document.querySelector('.btn-dificultad.active');
-            const nivel = botonActivo ? botonActivo.getAttribute('data-nivel') : 'facil';
-
-            if (nivel === 'facil') {
-                this.velocidad = 1000;
-                this.secuencia = this.generarSecuenciaAleatoria(6);   // 6 rondas
-            } else if (nivel === 'medio') {
-                this.velocidad = 700;
-                this.secuencia = this.generarSecuenciaAleatoria(12);  // 12 rondas
-            } else if (nivel === 'dificil') {
-                this.velocidad = 400;
-                this.secuencia = this.generarSecuenciaAleatoria(15);  // 15 rondas
-            }
-
-            this.rondaActual = 0;
-            this.posicionUsuario = 0;
-            this.botonesBloqueados = true;
-            this.mostrandoSecuencia = false;
-            this.display.estadoJuego.textContent = '';
-            this.display.estadoJuego.style.color = '#4682B4';
-            this.actualizarEstado("¡Vamos a empezar!", 0);
-            this.mostrarSecuencia();
-        }
-
-        limpiarEstado() {
-            clearTimeout(this.inactividadTimeout);
-            if (this.intervaloSecuencia) {
-                clearInterval(this.intervaloSecuencia);
-                this.intervaloSecuencia = null;
-            }
-            this.mostrandoSecuencia = false;
-            this.botonesBloqueados = true;
-            this.posicionUsuario = 0;
-            this.rondaActual = 0;
-            if (this.botones) {
-                this.botones.forEach(boton => {
-                    boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
-                });
-            }
-        }
-
-        actualizarEstado(mensaje, ronda) {
-            const mensajePositivo = mensajesPositivos[Math.floor(Math.random() * mensajesPositivos.length)];
-            this.display.estadoJuego.textContent = `${mensajePositivo} Siguiente ronda: ${ronda + 1}`;
-            this.display.estadoJuego.style.display = 'block';
-        }
-
-        validarColorElegido(indice) {
-            clearTimeout(this.inactividadTimeout);
-
-            if (this.secuencia[this.posicionUsuario] === indice) {
-                this.alternarEstiloBoton(this.botones[indice], true);
-                this.reproducirSonido(indice);
-
-                setTimeout(() => {
-                    this.alternarEstiloBoton(this.botones[indice], false);
-                }, this.velocidad / 2);
-
-                this.posicionUsuario++;
-
-                if (this.posicionUsuario > this.rondaActual) {
-                    this.rondaActual++;
-                    if (this.rondaActual < this.secuencia.length) {
-                        this.actualizarEstado("¡Muy bien!", this.rondaActual);
-                        this.botonesBloqueados = true;
-                        setTimeout(() => {
-                            if (!this.mostrandoSecuencia) {
-                                this.mostrarSecuencia();
-                            }
-                        }, this.velocidad);
-                    } else {
-                        this.ganarJuego();
-                        return;
-                    }
-                }
-            } else {
-                this.perderJuego();
-                return;
-            }
-
-            if (!this.juegoTerminado) {
-                this.inactividadTimeout = setTimeout(() => {
-                    this.perderJuego();
-                }, 7500); // ⬆️ era 5000, ahora 7500 (+50%)
-            }
-        }
-
-        mostrarSecuencia() {
-            if (this.mostrandoSecuencia) return;
-
-            this.mostrandoSecuencia = true;
-            this.botonesBloqueados = true;
-            clearTimeout(this.inactividadTimeout);
-
-            let indiceSecuencia = 0;
-
-            if (this.intervaloSecuencia) {
-                clearInterval(this.intervaloSecuencia);
-                this.intervaloSecuencia = null;
-            }
-
-            this.botones.forEach(boton => {
-                boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
+            botonEmpezar.addEventListener('click', () => {
+                botonEmpezar.disabled = true;
+                this.iniciarJuego();
             });
+        }
 
-            this.intervaloSecuencia = setInterval(() => {
-                if (indiceSecuencia > 0) {
-                    const anterior = this.secuencia[indiceSecuencia - 1];
-                    this.alternarEstiloBoton(this.botones[anterior], false);
+        obtenerConfigNivel() {
+            if (nivelSeleccionado === 'facil')   return { encendido: 400, gap: 150, espera: 8000 };
+            if (nivelSeleccionado === 'medio')   return { encendido: 280, gap: 100, espera: 6000 };
+            if (nivelSeleccionado === 'dificil') return { encendido: 180, gap: 70,  espera: 4000 };
+            return                                      { encendido: 400, gap: 150, espera: 8000 };
+        }
+
+        async iniciarJuego() {
+            const config = this.obtenerConfigNivel();
+            this.tiempoEncendido = config.encendido;
+            this.gap = config.gap;
+            this.tiempoEspera = config.espera;
+
+            this.secuencia = Array.from({length: 12}, () => Math.floor(Math.random() * 4));
+            this.esperandoJugador = false;
+            this.procesandoClic = false;
+            this.resolverClic = null;
+
+            this.botones.forEach(b => b.setAttribute('fill', b.getAttribute('data-color-inactivo')));
+            ronda.textContent = 'Ronda: 1';
+            ronda.style.display = 'block';
+            estadoJuego.textContent = '¡Atención!';
+            estadoJuego.style.color = '#4682B4';
+
+            await esperar(600);
+            await this.bucleJuego();
+        }
+
+        async bucleJuego() {
+            for (let r = 0; r < this.secuencia.length; r++) {
+                ronda.textContent = `Ronda: ${r + 1}`;
+                estadoJuego.textContent = '👀 Mira...';
+                estadoJuego.style.color = '#4682B4';
+
+                // ✅ Mostrar exactamente r+1 botones, uno por uno, sin solapamiento
+                for (let i = 0; i <= r; i++) {
+                    await esperar(this.gap);          // pausa ANTES de encender
+                    await this.iluminarBoton(this.secuencia[i]); // enciende y espera que se apague
                 }
 
-                if (indiceSecuencia <= this.rondaActual) {
-                    const indiceColor = this.secuencia[indiceSecuencia];
-                    this.reproducirSonido(indiceColor);                          // 🔊 Sonido PRIMERO
-                    this.alternarEstiloBoton(this.botones[indiceColor], true);   // 💡 Color DESPUÉS
-                    indiceSecuencia++;
-                } else {
-                    clearInterval(this.intervaloSecuencia);
-                    this.intervaloSecuencia = null;
+                await esperar(300); // pausa antes del turno del jugador
 
-                    const ultimoIndice = this.secuencia[this.rondaActual];
-                    this.alternarEstiloBoton(this.botones[ultimoIndice], false);
+                estadoJuego.textContent = '¡Tu turno!';
+                estadoJuego.style.color = '#28a745';
 
-                    this.botonesBloqueados = false;
-                    this.posicionUsuario = 0;
-                    this.mostrandoSecuencia = false;
+                const resultado = await this.turnoJugador(r);
+                if (!resultado) return;
 
+                await esperar(400);
+            }
+
+            this.ganarJuego();
+        }
+
+        turnoJugador(rondaMax) {
+            return new Promise((resolve) => {
+                let posicion = 0;
+                this.esperandoJugador = true;
+                this.procesandoClic = false;
+
+                const limpiar = () => {
+                    this.esperandoJugador = false;
+                    this.procesandoClic = false;
+                    this.resolverClic = null;
+                    clearTimeout(this.inactividadTimeout);
+                };
+
+                const resetTimer = () => {
+                    clearTimeout(this.inactividadTimeout);
                     this.inactividadTimeout = setTimeout(() => {
+                        limpiar();
                         this.perderJuego();
-                    }, 7500); // ⬆️ era 5000, ahora 7500 (+50%)
-                }
-            }, this.velocidad);
+                        resolve(false);
+                    }, this.tiempoEspera);
+                };
+
+                resetTimer();
+
+                this.resolverClic = async (indice) => {
+                    if (indice === this.secuencia[posicion]) {
+                        this.procesandoClic = true;
+                        clearTimeout(this.inactividadTimeout);
+                        await this.iluminarBoton(indice);
+                        this.procesandoClic = false;
+                        posicion++;
+
+                        if (posicion > rondaMax) {
+                            limpiar();
+                            resolve(true);
+                        } else {
+                            resetTimer();
+                        }
+                    } else {
+                        limpiar();
+                        this.perderJuego();
+                        resolve(false);
+                    }
+                };
+            });
         }
 
-        alternarEstiloBoton(boton, activar) {
-            if (activar) {
-                boton.setAttribute('fill', boton.getAttribute('data-color-activo'));
-            } else {
-                boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
+        recibirClic(indice) {
+            if (this.resolverClic) {
+                this.resolverClic(indice);
             }
         }
 
-        reproducirSonido(indice) {
+        // ✅ iluminarBoton es async y secuencial — enciende, espera, apaga
+        async iluminarBoton(indice) {
+            const boton = this.botones[indice];
             const audio = this.sonidosBoton[indice];
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(error => {
-                    console.error('Error al reproducir sonido.');
-                });
-            }
+
+            boton.setAttribute('fill', boton.getAttribute('data-color-activo'));
+            if (audio) { audio.currentTime = 0; audio.play().catch(e => {}); }
+
+            await esperar(this.tiempoEncendido);
+
+            boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
         }
 
         perderJuego() {
             clearTimeout(this.inactividadTimeout);
-            this.limpiarEstado();
-            this.display.estadoJuego.textContent = 'Perdiste. Intenta de nuevo.';
-            this.display.estadoJuego.style.color = 'red';
-            this.display.ronda.style.display = 'none';
-            this.reproducirSonido(4);
-            this.display.botonEmpezar.disabled = false;
+            this.esperandoJugador = false;
+            this.procesandoClic = false;
+            this.resolverClic = null;
+            this.botones.forEach(b => b.setAttribute('fill', b.getAttribute('data-color-inactivo')));
+            estadoJuego.textContent = '❌ Error. Inténtalo de nuevo.';
+            estadoJuego.style.color = 'red';
+            ronda.textContent = 'Ronda: 1';
+            this.sonidosBoton[4].play().catch(e => {});
+            botonEmpezar.disabled = false;
         }
 
         ganarJuego() {
-            this.juegoTerminado = true;
             clearTimeout(this.inactividadTimeout);
-            this.limpiarEstado();
+            this.esperandoJugador = false;
+            this.procesandoClic = false;
+            this.resolverClic = null;
+            this.botones.forEach(b => b.setAttribute('fill', b.getAttribute('data-color-inactivo')));
 
             const texto = "¡FELICIDADES GANASTE!";
             const colores = ['#FF0000', '#FF7F00', '#FFD700', '#00CC00', '#0000FF', '#8B00FF'];
+            estadoJuego.innerHTML = texto.split('').map((letra, i) =>
+                `<span style="color:${colores[i % colores.length]};font-weight:bold">${letra === ' ' ? '&nbsp;' : letra}</span>`
+            ).join('');
 
-            this.display.estadoJuego.innerHTML = texto.split('').map((letra, i) => {
-                const color = colores[i % colores.length];
-                return `<span style="color:${color}; font-weight:bold; display:inline-block; animation: saltarLetra 0.5s ease ${i * 0.05}s infinite alternate;">${letra === ' ' ? '&nbsp;' : letra}</span>`;
-            }).join('');
+            ronda.textContent = 'Ronda: 1';
+            this.sonidosBoton[5].play().catch(e => {});
+            botonEmpezar.disabled = false;
 
-            this.display.ronda.style.display = 'none';
-            this.reproducirSonido(5);
-            this.display.botonEmpezar.disabled = false;
-
-            let rafagasLanzadas = 0;
-            const maxRafagas = 4;
-            const lanzarRafaga = () => {
-                if (rafagasLanzadas < maxRafagas) {
-                    confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0, y: 0.6 } });
+            let rafagas = 0;
+            const lanzar = () => {
+                if (rafagas < 4) {
+                    confetti({ particleCount: 40, angle: 60,  spread: 55, origin: { x: 0, y: 0.6 } });
                     confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1, y: 0.6 } });
-                    rafagasLanzadas++;
-                    setTimeout(lanzarRafaga, 1000);
+                    rafagas++;
+                    setTimeout(lanzar, 1000);
                 }
             };
-            lanzarRafaga();
+            lanzar();
         }
     }
 

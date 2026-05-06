@@ -60,18 +60,23 @@
         </div>
       </div>
 
-      <!-- Selector de Dificultad -->
+      <!-- Selector de Dificultad DESPLEGABLE -->
       <div class="row justify-content-center mb-3">
-        <div class="col-12 text-center">
-          <div class="btn-group" role="group">
-            <button class="btn btn-dificultad active" data-nivel="facil">🟢 Fácil</button>
-            <button class="btn btn-dificultad" data-nivel="medio">🟡 Medio</button>
-            <button class="btn btn-dificultad" data-nivel="dificil">🔴 Difícil</button>
+        <div class="col-12 col-sm-8 col-md-6 text-center">
+          <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle btn-block" type="button" id="dropdownNivel" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              🟢 Fácil — Selecciona tu nivel
+            </button>
+            <div class="dropdown-menu w-100 text-center" aria-labelledby="dropdownNivel">
+              <a class="dropdown-item nivel-item" href="#" data-nivel="facil">🟢 Fácil — Para calentar motores</a>
+              <a class="dropdown-item nivel-item" href="#" data-nivel="medio">🟡 Medio — El reto comienza</a>
+              <a class="dropdown-item nivel-item" href="#" data-nivel="dificil">🔴 Difícil — Solo para valientes</a>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Estado del Juego + Círculo -->
+      <!-- Estado del Juego -->
       <div class="row justify-content-center">
         <div class="col-12">
           <div class="contenedorEstado mb-2 text-center">
@@ -130,10 +135,9 @@
 
       function intentarLogin() {
         if (inputPassword.value === CONTRASENA) {
+          try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch(e) {}
           loginScreen.style.display = 'none';
           gameContainer.style.display = 'block';
-          // Activar audio context al hacer login
-          try { new (window.AudioContext || window.webkitAudioContext)().resume(); } catch(e) {}
         } else {
           loginError.style.display = 'block';
           inputPassword.value = '';
