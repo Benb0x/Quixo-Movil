@@ -8,6 +8,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const mensajesPositivos = ["¡Bien hecho!", "¡Excelente!", "¡Sigue así!", "¡Muy bien!", "¡Continúa!"];
 
+    // Botones de dificultad
+    const botonesDificultad = document.querySelectorAll('.btn-dificultad');
+    botonesDificultad.forEach(btn => {
+        btn.addEventListener('click', function() {
+            botonesDificultad.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+
     acceptAudioButton.addEventListener('click', function () {
         const audio = new Audio('https://quixo-sonidos.vercel.app/sounds_1.m4a');
         audio.play().then(() => {
@@ -30,11 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.mostrandoSecuencia = false;
             this.intervaloSecuencia = null;
 
-            this.display = {
-                botonEmpezar,
-                ronda,
-                estadoJuego
-            };
+            this.display = { botonEmpezar, ronda, estadoJuego };
 
             this.cargarSonidos();
             this.iniciar();
@@ -49,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 'https://quixo-sonidos.vercel.app/sounds_error.m4a',
                 'https://quixo-sonidos.vercel.app/win.m4a'
             ];
-
             sonidos.forEach((sonido, indice) => {
                 const audio = new Audio(sonido);
                 audio.preload = "auto";
@@ -67,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.botones = Array.from(botonesJuego);
             this.botones.forEach(boton => {
                 boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
-
                 boton.addEventListener('click', (event) => {
                     if (!this.botonesBloqueados && !this.mostrandoSecuencia) {
                         const indice = this.botones.indexOf(event.currentTarget);
@@ -80,34 +83,30 @@ document.addEventListener('DOMContentLoaded', function () {
         generarSecuenciaAleatoria(longitud) {
             const secuencia = [];
             for (let i = 0; i < longitud; i++) {
-                const colorAleatorio = Math.floor(Math.random() * 4);
-                secuencia.push(colorAleatorio);
+                secuencia.push(Math.floor(Math.random() * 4));
             }
             return secuencia;
         }
 
-       reiniciarJuego() {
+        reiniciarJuego() {
             this.juegoTerminado = false;
             this.limpiarEstado();
 
-            // ===== LEER NIVEL SELECCIONADO Y AJUSTAR RONDAS =====
+            // Leer nivel seleccionado
             const botonActivo = document.querySelector('.btn-dificultad.active');
             const nivel = botonActivo ? botonActivo.getAttribute('data-nivel') : 'facil';
 
-            let longitudTotal = 12; // Valor por defecto
             if (nivel === 'facil') {
                 this.velocidad = 1000;
-                longitudTotal = 6;  // Para ganar en modo Fácil
+                this.secuencia = this.generarSecuenciaAleatoria(6);   // 6 rondas
             } else if (nivel === 'medio') {
                 this.velocidad = 700;
-                longitudTotal = 12; // Para ganar en modo Medio
+                this.secuencia = this.generarSecuenciaAleatoria(12);  // 12 rondas
             } else if (nivel === 'dificil') {
                 this.velocidad = 400;
-                longitudTotal = 15; // Para ganar en modo Difícil
+                this.secuencia = this.generarSecuenciaAleatoria(15);  // 15 rondas
             }
-            // ====================================================
 
-            this.secuencia = this.generarSecuenciaAleatoria(longitudTotal);
             this.rondaActual = 0;
             this.posicionUsuario = 0;
             this.botonesBloqueados = true;
@@ -120,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         limpiarEstado() {
             clearTimeout(this.inactividadTimeout);
-
             if (this.intervaloSecuencia) {
                 clearInterval(this.intervaloSecuencia);
                 this.intervaloSecuencia = null;
@@ -129,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.botonesBloqueados = true;
             this.posicionUsuario = 0;
             this.rondaActual = 0;
-
             if (this.botones) {
                 this.botones.forEach(boton => {
                     boton.setAttribute('fill', boton.getAttribute('data-color-inactivo'));
@@ -161,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (this.rondaActual < this.secuencia.length) {
                         this.actualizarEstado("¡Muy bien!", this.rondaActual);
                         this.botonesBloqueados = true;
-
                         setTimeout(() => {
                             if (!this.mostrandoSecuencia) {
                                 this.mostrarSecuencia();
@@ -180,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!this.juegoTerminado) {
                 this.inactividadTimeout = setTimeout(() => {
                     this.perderJuego();
-                }, 5000);
+                }, 7500); // ⬆️ era 5000, ahora 7500 (+50%)
             }
         }
 
@@ -210,8 +206,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (indiceSecuencia <= this.rondaActual) {
                     const indiceColor = this.secuencia[indiceSecuencia];
-                    this.alternarEstiloBoton(this.botones[indiceColor], true);
-                    this.reproducirSonido(indiceColor);
+                    this.reproducirSonido(indiceColor);                          // 🔊 Sonido PRIMERO
+                    this.alternarEstiloBoton(this.botones[indiceColor], true);   // 💡 Color DESPUÉS
                     indiceSecuencia++;
                 } else {
                     clearInterval(this.intervaloSecuencia);
@@ -226,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     this.inactividadTimeout = setTimeout(() => {
                         this.perderJuego();
-                    }, 5000);
+                    }, 7500); // ⬆️ era 5000, ahora 7500 (+50%)
                 }
             }, this.velocidad);
         }
@@ -291,4 +287,4 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     new Quixo();
-});WD
+});
