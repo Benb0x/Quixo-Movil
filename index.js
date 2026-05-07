@@ -13,9 +13,9 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
             nivelSeleccionado = this.getAttribute('data-nivel');
             const textos = {
-                facil:   '1.🟢 Fácil — Normal',
-                medio:   '2.🟡 Medio — Rápido',
-                dificil: '3.🔴 Difícil — ¡Super Veloz!'
+                facil:   '1 🟢 Fácil — Normal',
+                medio:   '2 🟡 Medio — Rápido',
+                dificil: '3 🔴 Difícil — ¡Super Veloz!'
             };
             document.getElementById('dropdownNivel').textContent = textos[nivelSeleccionado];
         });
