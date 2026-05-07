@@ -77,11 +77,45 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         obtenerConfigNivel() {
-            if (nivelSeleccionado === 'facil')   return { encendido: 400, gap: 150, espera: 8000 };
-            if (nivelSeleccionado === 'medio')   return { encendido: 280, gap: 100, espera: 6000 };
-            if (nivelSeleccionado === 'dificil') return { encendido: 180, gap: 70,  espera: 4000 };
-            return                                      { encendido: 400, gap: 150, espera: 8000 };
-        }
+
+    // 🟢 FÁCIL → 8 rondas
+    if (nivelSeleccionado === 'facil') {
+        return {
+            encendido: 400,
+            gap: 150,
+            espera: 8000,
+            rondas: 8
+        };
+    }
+
+    // 🟡 MEDIO → 12 rondas
+    if (nivelSeleccionado === 'medio') {
+        return {
+            encendido: 280,
+            gap: 100,
+            espera: 6000,
+            rondas: 12
+        };
+    }
+
+    // 🔴 DIFÍCIL → 18 rondas
+    if (nivelSeleccionado === 'dificil') {
+        return {
+            encendido: 180,
+            gap: 70,
+            espera: 4000,
+            rondas: 18
+        };
+    }
+
+    // valor por defecto
+    return {
+        encendido: 400,
+        gap: 150,
+        espera: 8000,
+        rondas: 8
+    };
+}
 
         async iniciarJuego() {
             const config = this.obtenerConfigNivel();
@@ -89,7 +123,10 @@ document.addEventListener('DOMContentLoaded', function () {
             this.gap = config.gap;
             this.tiempoEspera = config.espera;
 
-            this.secuencia = Array.from({length: 12}, () => Math.floor(Math.random() * 4));
+            this.secuencia = Array.from(
+    { length: config.rondas },
+    () => Math.floor(Math.random() * 4)
+);
             this.esperandoJugador = false;
             this.procesandoClic = false;
             this.resolverClic = null;
