@@ -100,3 +100,45 @@
     font-weight: 600;
     border-radius: 8px;
 }
+/* ALINEAR TODOS LOS CÍRCULOS */
+
+.nivel-item{
+
+    display:flex;
+    align-items:center;
+}
+
+.nivel-item .numero{
+
+    width:25px;
+    text-align:right;
+    display:inline-block;
+}
+
+.nivel-item .circulo{
+
+    margin-left:8px;
+    margin-right:10px;
+
+    flex-shrink:0;
+}
+/* SOLO ALINEAR LOS CÍRCULOS */
+
+.nivel-item{
+
+    padding-left:45px;
+}
+
+.nivel-item .numero{
+
+    display:inline-block;
+
+    width:22px;
+
+    text-align:right;
+}/* MOVER CONTENIDO UN POCO HACIA EL CENTRO */
+
+.dropdown-menu{
+
+    padding-left:130px;
+}
