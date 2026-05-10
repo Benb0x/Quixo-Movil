@@ -77,10 +77,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             urls.forEach((url, i) => {
 
-                this.sonidosBoton[i] = new Audio(url);
+                const audio = new Audio(url);
 
-                this.sonidosBoton[i].preload = "auto";
+                audio.preload = "auto";
 
+                // ✅ ARREGLO SONIDOS RÁPIDOS
+                audio.load();
+
+                this.sonidosBoton[i] = audio;
             });
         }
 
@@ -97,7 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 boton.addEventListener('click', () => {
 
-                    // ✅ ARREGLO FLUIDEZ
                     if (this.esperandoJugador) {
 
                         this.recibirClic(i);
@@ -116,34 +119,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
         obtenerConfigNivel() {
 
-            // 🟢 FÁCIL
             if (nivelSeleccionado === 'facil') {
 
                 return {
                     encendido: 400,
-                    gap: 150,
+                    gap: 180,
                     espera: 8000,
                     rondas: 6
                 };
             }
 
-            // 🟡 MEDIO
             if (nivelSeleccionado === 'medio') {
 
                 return {
                     encendido: 280,
-                    gap: 100,
+                    gap: 110,
                     espera: 6000,
                     rondas: 12
                 };
             }
 
-            // 🔴 DIFÍCIL
             if (nivelSeleccionado === 'dificil') {
 
                 return {
                     encendido: 180,
-                    gap: 70,
+                    gap: 80,
                     espera: 4000,
                     rondas: 18
                 };
@@ -185,8 +185,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            ronda.style.display = 'block';
-
             estadoJuego.textContent = '¡Atención!';
 
             estadoJuego.style.color = '#4682B4';
@@ -206,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 estadoJuego.style.color = '#4682B4';
 
-                // ✅ SECUENCIA PERFECTA
                 for (let i = 0; i <= r; i++) {
 
                     await esperar(this.gap);
@@ -272,12 +269,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 resetTimer();
 
-                // ✅ ARREGLO FLUIDEZ
                 this.resolverClic = async (indice) => {
 
                     clearTimeout(this.inactividadTimeout);
 
-                    // ❌ ERROR
                     if (indice !== this.secuencia[posicion]) {
 
                         limpiar();
@@ -289,12 +284,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
-                    // ✅ iluminar normal
                     await this.iluminarBoton(indice);
 
                     posicion++;
 
-                    // ✅ ronda completada
                     if (posicion > rondaMax) {
 
                         limpiar();
@@ -317,23 +310,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // ✅ ILUMINACIÓN PERFECTA
+        // ✅ ARREGLO DEFINITIVO SONIDOS
         async iluminarBoton(indice) {
 
             const boton = this.botones[indice];
 
-            const audio = this.sonidosBoton[indice];
+            const sonidoOriginal = this.sonidosBoton[indice];
 
             boton.setAttribute(
                 'fill',
                 boton.getAttribute('data-color-activo')
             );
 
-            if (audio) {
+            // ✅ CLONAR AUDIO
+            // evita que sonidos rápidos se corten
+            if (sonidoOriginal) {
 
-                audio.currentTime = 0;
+                const sonido = sonidoOriginal.cloneNode();
 
-                audio.play().catch(() => { });
+                sonido.volume = 1;
+
+                sonido.play().catch(() => { });
             }
 
             await esperar(this.tiempoEncendido);
@@ -370,7 +367,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            // ✅ SONIDO ERROR
             const errorAudio = this.sonidosBoton[4];
 
             errorAudio.pause();
@@ -468,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     new Quixo();
 
-    // ✅ REINICIAR SI SALES Y REGRESAS
+    // ✅ RECARGAR SI SALES Y REGRESAS
     document.addEventListener("visibilitychange", () => {
 
         if (!document.hidden) {
