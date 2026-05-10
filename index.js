@@ -52,15 +52,13 @@ document.addEventListener('DOMContentLoaded', function () {
             this.sonidosBoton = [];
 
             this.esperandoJugador = false;
+            this.procesandoClic = false;
             this.inactividadTimeout = null;
             this.resolverClic = null;
 
             this.tiempoEncendido = 350;
             this.gap = 100;
             this.tiempoEspera = 8000;
-
-            this.colaClicks = [];
-            this.procesandoCola = false;
 
             this.cargarSonidos();
             this.iniciar();
@@ -80,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
             urls.forEach((url, i) => {
 
                 this.sonidosBoton[i] = new Audio(url);
+
                 this.sonidosBoton[i].preload = "auto";
 
             });
@@ -98,11 +97,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 boton.addEventListener('click', () => {
 
-                    if (!this.esperandoJugador) return;
+                    // ✅ ARREGLO FLUIDEZ
+                    if (this.esperandoJugador) {
 
-                    this.colaClicks.push(i);
-
-                    this.procesarColaClicks();
+                        this.recibirClic(i);
+                    }
                 });
             });
 
@@ -117,16 +116,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         obtenerConfigNivel() {
 
+            // 🟢 FÁCIL
             if (nivelSeleccionado === 'facil') {
 
                 return {
-                    encendido: 420,
-                    gap: 180,
+                    encendido: 400,
+                    gap: 150,
                     espera: 8000,
                     rondas: 6
                 };
             }
 
+            // 🟡 MEDIO
             if (nivelSeleccionado === 'medio') {
 
                 return {
@@ -137,12 +138,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
             }
 
+            // 🔴 DIFÍCIL
             if (nivelSeleccionado === 'dificil') {
 
                 return {
                     encendido: 180,
                     gap: 70,
-                    espera: 4500,
+                    espera: 4000,
                     rondas: 18
                 };
             }
@@ -151,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 encendido: 400,
                 gap: 150,
                 espera: 8000,
-                rondas: 6
+                rondas: 8
             };
         }
 
@@ -168,8 +170,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 () => Math.floor(Math.random() * 4)
             );
 
-            this.colaClicks = [];
-            this.procesandoCola = false;
+            this.esperandoJugador = false;
+            this.procesandoClic = false;
+            this.resolverClic = null;
 
             this.botones.forEach(b => {
 
@@ -182,7 +185,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
+            ronda.style.display = 'block';
+
             estadoJuego.textContent = '¡Atención!';
+
             estadoJuego.style.color = '#4682B4';
 
             await esperar(600);
@@ -197,14 +203,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 ronda.textContent = `Ronda: ${r + 1}`;
 
                 estadoJuego.textContent = '👀 Mira...';
+
                 estadoJuego.style.color = '#4682B4';
 
-                // ✅ MOSTRAR SECUENCIA
+                // ✅ SECUENCIA PERFECTA
                 for (let i = 0; i <= r; i++) {
 
                     await esperar(this.gap);
 
-                    await this.iluminarSecuencia(
+                    await this.iluminarBoton(
                         this.secuencia[i]
                     );
                 }
@@ -212,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await esperar(300);
 
                 estadoJuego.textContent = '¡Tu turno!';
+
                 estadoJuego.style.color = '#28a745';
 
                 const resultado =
@@ -233,13 +241,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 this.esperandoJugador = true;
 
+                this.procesandoClic = false;
+
                 const limpiar = () => {
 
                     this.esperandoJugador = false;
 
-                    clearTimeout(this.inactividadTimeout);
+                    this.procesandoClic = false;
 
-                    this.colaClicks = [];
+                    this.resolverClic = null;
+
+                    clearTimeout(this.inactividadTimeout);
                 };
 
                 const resetTimer = () => {
@@ -260,10 +272,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 resetTimer();
 
+                // ✅ ARREGLO FLUIDEZ
                 this.resolverClic = async (indice) => {
 
                     clearTimeout(this.inactividadTimeout);
 
+                    // ❌ ERROR
                     if (indice !== this.secuencia[posicion]) {
 
                         limpiar();
@@ -275,10 +289,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // ✅ iluminar normal
                     await this.iluminarBoton(indice);
 
                     posicion++;
 
+                    // ✅ ronda completada
                     if (posicion > rondaMax) {
 
                         limpiar();
@@ -293,27 +309,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        async procesarColaClicks() {
+        recibirClic(indice) {
 
-            if (this.procesandoCola) return;
+            if (this.resolverClic) {
 
-            this.procesandoCola = true;
-
-            while (this.colaClicks.length > 0) {
-
-                const indice = this.colaClicks.shift();
-
-                if (this.resolverClic) {
-
-                    await this.resolverClic(indice);
-                }
+                this.resolverClic(indice);
             }
-
-            this.procesandoCola = false;
         }
 
-        // ✅ SECUENCIA DEL JUEGO
-        async iluminarSecuencia(indice) {
+        // ✅ ILUMINACIÓN PERFECTA
+        async iluminarBoton(indice) {
 
             const boton = this.botones[indice];
 
@@ -339,42 +344,15 @@ document.addEventListener('DOMContentLoaded', function () {
             );
         }
 
-        // ✅ CLIC DEL JUGADOR
-        async iluminarBoton(indice) {
-
-            const boton = this.botones[indice];
-
-            const audio = this.sonidosBoton[indice];
-
-            boton.setAttribute(
-                'fill',
-                boton.getAttribute('data-color-activo')
-            );
-
-            if (audio) {
-
-                audio.currentTime = 0;
-
-                audio.play().catch(() => { });
-            }
-
-            setTimeout(() => {
-
-                boton.setAttribute(
-                    'fill',
-                    boton.getAttribute('data-color-inactivo')
-                );
-
-            }, this.tiempoEncendido);
-        }
-
         perderJuego() {
 
             clearTimeout(this.inactividadTimeout);
 
             this.esperandoJugador = false;
 
-            this.colaClicks = [];
+            this.procesandoClic = false;
+
+            this.resolverClic = null;
 
             this.botones.forEach(b => {
 
@@ -396,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const errorAudio = this.sonidosBoton[4];
 
             errorAudio.pause();
+
             errorAudio.currentTime = 0;
 
             setTimeout(() => {
@@ -413,7 +392,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.esperandoJugador = false;
 
-            this.colaClicks = [];
+            this.procesandoClic = false;
+
+            this.resolverClic = null;
 
             this.botones.forEach(b => {
 
@@ -437,14 +418,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
             estadoJuego.innerHTML = texto
                 .split('')
-                .map((letra, i) => `
-                    <span style="
+                .map((letra, i) =>
+                    `<span style="
                         color:${colores[i % colores.length]};
                         font-weight:bold
                     ">
-                        ${letra === ' ' ? '&nbsp;' : letra}
-                    </span>
-                `)
+                        ${letra === ' '
+                            ? '&nbsp;'
+                            : letra}
+                    </span>`
+                )
                 .join('');
 
             ronda.textContent = 'Ronda: 1';
@@ -485,7 +468,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     new Quixo();
 
-    // ✅ REINICIAR SI EL USUARIO SALE Y REGRESA
+    // ✅ REINICIAR SI SALES Y REGRESAS
     document.addEventListener("visibilitychange", () => {
 
         if (!document.hidden) {
