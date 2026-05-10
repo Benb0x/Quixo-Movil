@@ -450,3 +450,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     new Quixo();
 });
+
+document.addEventListener("visibilitychange", () => {
+
+    if (!document.hidden) {
+
+        location.reload();
+    }
+});
