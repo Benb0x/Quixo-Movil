@@ -199,11 +199,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 estadoJuego.textContent = '👀 Mira...';
                 estadoJuego.style.color = '#4682B4';
 
+                // ✅ MOSTRAR SECUENCIA
                 for (let i = 0; i <= r; i++) {
 
                     await esperar(this.gap);
 
-                    await this.iluminarBoton(
+                    await this.iluminarSecuencia(
                         this.secuencia[i]
                     );
                 }
@@ -311,7 +312,8 @@ document.addEventListener('DOMContentLoaded', function () {
             this.procesandoCola = false;
         }
 
-        async iluminarBoton(indice) {
+        // ✅ SECUENCIA DEL JUEGO
+        async iluminarSecuencia(indice) {
 
             const boton = this.botones[indice];
 
@@ -322,7 +324,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 boton.getAttribute('data-color-activo')
             );
 
-            // ✅ SONIDO SECUENCIA FUNCIONANDO
             if (audio) {
 
                 audio.currentTime = 0;
@@ -336,6 +337,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 'fill',
                 boton.getAttribute('data-color-inactivo')
             );
+        }
+
+        // ✅ CLIC DEL JUGADOR
+        async iluminarBoton(indice) {
+
+            const boton = this.botones[indice];
+
+            const audio = this.sonidosBoton[indice];
+
+            boton.setAttribute(
+                'fill',
+                boton.getAttribute('data-color-activo')
+            );
+
+            if (audio) {
+
+                audio.currentTime = 0;
+
+                audio.play().catch(() => { });
+            }
+
+            setTimeout(() => {
+
+                boton.setAttribute(
+                    'fill',
+                    boton.getAttribute('data-color-inactivo')
+                );
+
+            }, this.tiempoEncendido);
         }
 
         perderJuego() {
@@ -362,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            // ✅ SONIDO ERROR CORREGIDO
+            // ✅ SONIDO ERROR
             const errorAudio = this.sonidosBoton[4];
 
             errorAudio.pause();
