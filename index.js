@@ -36,7 +36,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         audio.play()
             .then(() => {
+
                 audioPermissionModal.style.display = 'none';
+
             })
             .catch(() => { });
     });
@@ -80,9 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const audio = new Audio(url);
 
                 audio.preload = "auto";
-
-                // ✅ ARREGLO SONIDOS RÁPIDOS
-                audio.load();
 
                 this.sonidosBoton[i] = audio;
             });
@@ -310,27 +309,29 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // ✅ ARREGLO DEFINITIVO SONIDOS
+        // ✅ AUDIO Y LUCES ESTABLES
         async iluminarBoton(indice) {
 
             const boton = this.botones[indice];
 
-            const sonidoOriginal = this.sonidosBoton[indice];
+            const audio = this.sonidosBoton[indice];
 
             boton.setAttribute(
                 'fill',
                 boton.getAttribute('data-color-activo')
             );
 
-            // ✅ CLONAR AUDIO
-            // evita que sonidos rápidos se corten
-            if (sonidoOriginal) {
+            if (audio) {
 
-                const sonido = sonidoOriginal.cloneNode();
+                try {
 
-                sonido.volume = 1;
+                    audio.pause();
 
-                sonido.play().catch(() => { });
+                    audio.currentTime = 0;
+
+                    await audio.play();
+
+                } catch (e) {}
             }
 
             await esperar(this.tiempoEncendido);
