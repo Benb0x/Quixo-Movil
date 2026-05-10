@@ -59,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.gap = 100;
             this.tiempoEspera = 8000;
 
-            // ✅ NUEVO
             this.colaClicks = [];
             this.procesandoCola = false;
 
@@ -101,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (!this.esperandoJugador) return;
 
-                    // ✅ guardar clic en cola
                     this.colaClicks.push(i);
 
                     this.procesarColaClicks();
@@ -201,7 +199,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 estadoJuego.textContent = '👀 Mira...';
                 estadoJuego.style.color = '#4682B4';
 
-                // ✅ MOSTRAR SECUENCIA PERFECTA
                 for (let i = 0; i <= r; i++) {
 
                     await esperar(this.gap);
@@ -266,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     clearTimeout(this.inactividadTimeout);
 
-                    // ❌ ERROR
                     if (indice !== this.secuencia[posicion]) {
 
                         limpiar();
@@ -278,12 +274,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
-                    // ✅ iluminar correctamente
                     await this.iluminarBoton(indice);
 
                     posicion++;
 
-                    // ✅ ronda completada
                     if (posicion > rondaMax) {
 
                         limpiar();
@@ -328,6 +322,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 boton.getAttribute('data-color-activo')
             );
 
+            // ✅ SONIDO SECUENCIA FUNCIONANDO
             if (audio) {
 
                 audio.currentTime = 0;
@@ -367,7 +362,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            this.sonidosBoton[4].play().catch(() => { });
+            // ✅ SONIDO ERROR CORREGIDO
+            const errorAudio = this.sonidosBoton[4];
+
+            errorAudio.pause();
+            errorAudio.currentTime = 0;
+
+            setTimeout(() => {
+
+                errorAudio.play().catch(() => { });
+
+            }, 80);
 
             botonEmpezar.disabled = false;
         }
@@ -449,12 +454,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     new Quixo();
-});
 
-document.addEventListener("visibilitychange", () => {
+    // ✅ REINICIAR SI EL USUARIO SALE Y REGRESA
+    document.addEventListener("visibilitychange", () => {
 
-    if (!document.hidden) {
+        if (!document.hidden) {
 
-        location.reload();
-    }
+            location.reload();
+        }
+    });
 });
