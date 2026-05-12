@@ -70,35 +70,29 @@
     color: #666;
 }
 
-
 .input-password-custom,
 .boton-login-custom{
-
     width:320px !important;
-
     margin:auto;
-}
-
-/* input más delgado */
-
-.input-password-custom{
-
-    height:32px;
-
-    font-size:13px;
-
-    padding:2px 12px;
-
-    border-radius:8px;
-}
-
-/* botón más delgado */
-
-.boton-login-custom{
-    width:320px !important;
-    height:36px !important;
     display:block;
-    margin:auto;
+}
+
+/* INPUT */
+.input-password-custom{
+    height:36px !important;
+    font-size:13px;
+    padding:2px 12px;
+    border-radius:8px;
+    box-sizing:border-box;
+}
+
+/* BOTÓN */
+.boton-login-custom{
+    height:36px !important;
+    min-width:320px !important;
+    max-width:320px !important;
+    padding:0 !important;
+    box-sizing:border-box;
 }
 
 /* ===== INSTRUCCIONES ===== */
