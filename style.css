@@ -72,28 +72,13 @@
 
 /* INPUT MÁS PEQUEÑO */
 .input-password-custom{
-
     width:100%;
-
     max-width:320px;
-
-    height:32px;
-
     margin:auto;
-
-    font-size:13px;
-
-    padding:2px 12px;
-
-    border-radius:8px;
 }
 
-/* BOTÓN MÁS PEQUEÑO */
-
 .boton-login-custom{
-
     width:100%;
-
     max-width:320px;
 
     height:36px;
@@ -105,6 +90,8 @@
     padding:2px 12px;
 
     border-radius:10px;
+
+    display:block;
 }
 
 /* ===== INSTRUCCIONES ===== */
