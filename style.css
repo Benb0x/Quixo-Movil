@@ -70,20 +70,33 @@
     color: #666;
 }
 
-/* INPUT MÁS PEQUEÑO */
-.input-password-custom{
-    width:100%;
-    max-width:320px;
+
+.input-password-custom,
+.boton-login-custom{
+
+    width:320px !important;
+
     margin:auto;
 }
 
+/* input más delgado */
+
+.input-password-custom{
+
+    height:32px;
+
+    font-size:13px;
+
+    padding:2px 12px;
+
+    border-radius:8px;
+}
+
+/* botón más delgado */
+
 .boton-login-custom{
-    width:100%;
-    max-width:350px;
 
     height:36px;
-
-    margin:auto;
 
     font-size:13px;
 
