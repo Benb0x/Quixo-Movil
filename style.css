@@ -95,20 +95,10 @@
 /* botón más delgado */
 
 .boton-login-custom{
-
     width:320px !important;
-
-    height:36px;
-
-    margin:auto;
-
+    height:36px !important;
     display:block;
-
-    font-size:13px;
-
-    padding:2px 12px;
-
-    border-radius:10px;
+    margin:auto;
 }
 
 /* ===== INSTRUCCIONES ===== */
