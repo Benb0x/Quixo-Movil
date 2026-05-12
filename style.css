@@ -1,140 +1,329 @@
 /* ===== LOGIN SCREEN ===== */
+
 .login-screen {
     position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
     background: #f0f4f8;
+
     display: flex;
     justify-content: center;
     align-items: center;
+
     z-index: 9999;
 }
 
 .login-box {
     background: #ffffff;
+
     padding: 40px 30px;
+
     border-radius: 16px;
+
     box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+
     text-align: center;
+
     max-width: 360px;
     width: 90%;
+
     color: #333;
 }
 
+/* ===== ESTILO QUixO DICE ===== */
+
+.titulo-quixo {
+
+    font-family: 'Baloo 2', cursive;
+
+    font-weight: 700;
+
+    background: linear-gradient(
+        90deg,
+        #ff006e 0%,
+        #ff2fa2 30%,
+        #d96dff 65%,
+        #a855f7 100%
+    );
+
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    background-clip: text;
+
+    letter-spacing: 1px;
+
+    text-shadow:
+        0 2px 12px rgba(255, 0, 110, 0.18),
+        0 2px 18px rgba(168, 85, 247, 0.15);
+
+    display: inline-block;
+}
+
+/* ===== LOGIN ===== */
+
+.texto-login {
+    color: #666;
+}
+
+/* INPUT MÁS PEQUEÑO */
+.input-password-custom {
+
+    max-width: 180px;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    border-radius: 8px;
+
+    font-size: 0.85rem;
+
+    padding: 6px 10px;
+}
+
+/* BOTÓN MÁS PEQUEÑO */
+
+.boton-login-custom {
+
+    width: auto;
+
+    min-width: 100px;
+
+    padding: 6px 16px;
+
+    border-radius: 8px;
+
+    font-weight: 600;
+
+    font-size: 0.9rem;
+
+    margin: 0 auto;
+
+    display: inline-block;
+}
+
+/* ===== INSTRUCCIONES ===== */
+
+.instrucciones-juego strong {
+
+    font-weight: 700;
+
+    color: #222;
+}
+
+.texto-destacado {
+
+    color: #8b3dff;
+}
+
 /* ===== JUEGO ===== */
-#caraCentro, #caraInferiorD, #caraInferiorI {
+
+#caraCentro,
+#caraInferiorD,
+#caraInferiorI {
+
     fill: #E7E1E1;
 }
 
 .circuloInteractivo {
+
     background: #312E2E;
+
     width: 100%;
     max-width: 300px;
-    padding: 12px 12px 12px;
+
+    padding: 12px;
+
     border-radius: 9999px;
+
     display: flex;
+
     justify-content: center;
     align-items: center;
+
     margin: 0 auto;
+
     overflow: visible;
 }
 
 .lineasQuixo {
+
     width: 70%;
     height: auto;
 }
 
 .svg-responsive {
+
     width: 100%;
     height: auto;
+
     max-width: 100%;
 }
 
-@media (max-width: 375px) {
-    .lineasQuixo { width: 55%; }
-}
-
-@media (max-width: 320px) {
-    .lineasQuixo { width: 50%; }
-}
-
-@media (min-width: 376px) and (max-width: 430px) {
-    .lineasQuixo { width: 65%; }
-}
-
-@media (min-width: 431px) {
-    .lineasQuixo { width: 70%; }
-}
-
 .contenedorJuego {
+
     margin-bottom: 22px;
 }
 
 .botonComenzar {
+
     margin-top: 13px;
 }
 
+/* ===== ANIMACIÓN ===== */
+
 @keyframes saltarLetra {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-10px); }
+
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-10px);
+    }
 }
 
-/* ===== DROPDOWN NIVEL ===== */
+/* ===== DROPDOWN ===== */
+
 .dropdown-menu {
+
     border-radius: 10px;
+
     box-shadow: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 .dropdown-item.nivel-item {
+
     padding: 10px 20px;
+
     font-size: 0.95rem;
+
     cursor: pointer;
 }
 
 .dropdown-item.nivel-item:hover {
-    background-color: #e8f0fe;
-    color: #1a73e8;
+
+    background-color: #f4e8ff;
+
+    color: #a855f7;
 }
 
 #dropdownNivel {
+
     font-weight: 600;
+
     border-radius: 8px;
 }
-/* ALINEAR TODOS LOS CÍRCULOS */
 
-.nivel-item{
+/* ===== ALINEACIONES ===== */
 
-    display:flex;
-    align-items:center;
+.nivel-item {
+
+    display: flex;
+
+    align-items: center;
+
+    padding-left: 45px;
 }
 
-.nivel-item .numero{
+.nivel-item .numero {
 
-    width:25px;
-    text-align:right;
-    display:inline-block;
+    display: inline-block;
+
+    width: 22px;
+
+    text-align: right;
 }
 
-.nivel-item .circulo{
+.nivel-item .circulo {
 
-    margin-left:8px;
-    margin-right:10px;
+    margin-left: 8px;
+    margin-right: 10px;
 
-    flex-shrink:0;
-}
-/* SOLO ALINEAR LOS CÍRCULOS */
-
-.nivel-item{
-
-    padding-left:45px;
+    flex-shrink: 0;
 }
 
-.nivel-item .numero{
+/* ===== RESPONSIVE ===== */
 
-    display:inline-block;
+@media (max-width: 768px) {
 
-    width:22px;
+    .titulo-quixo {
 
-    text-align:right;
-}/* MOVER CONTENIDO UN POCO HACIA EL CENTRO */
+        font-size: 2rem;
+    }
 
+    .input-password-custom {
+
+        max-width: 200px;
+    }
+
+    .boton-login-custom {
+
+        min-width: 110px;
+    }
+}
+
+@media (max-width: 430px) {
+
+    .lineasQuixo {
+
+        width: 65%;
+    }
+
+    .titulo-quixo {
+
+        font-size: 1.8rem;
+
+        line-height: 1.2;
+    }
+
+    .login-box {
+
+        padding: 30px 22px;
+    }
+}
+
+@media (max-width: 375px) {
+
+    .lineasQuixo {
+
+        width: 55%;
+    }
+
+    .input-password-custom {
+
+        max-width: 180px;
+
+        font-size: 0.9rem;
+    }
+
+    .boton-login-custom {
+
+        padding: 7px 18px;
+    }
+}
+
+@media (max-width: 320px) {
+
+    .lineasQuixo {
+
+        width: 50%;
+    }
+
+    .titulo-quixo {
+
+        font-size: 1.5rem;
+    }
+}
+
+@media (min-width: 431px) {
+
+    .lineasQuixo {
+
+        width: 70%;
+    }
+}
