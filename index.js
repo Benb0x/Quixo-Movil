@@ -81,9 +81,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const audio = new Audio(url);
 
-                audio.preload = "auto";
+audio.preload = "auto";
 
-                this.sonidosBoton[i] = audio;
+/* 🔊 volumen */
+audio.volume = 1.0;
+
+this.sonidosBoton[i] = audio;
             });
         }
 
