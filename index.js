@@ -1,98 +1,151 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    const audioPermissionModal = document.getElementById("audioPermissionModal");
-    const acceptAudioButton = document.getElementById("acceptAudio");
-    const botonEmpezar = document.getElementById("botonEmpezar");
-    const estadoJuego = document.getElementById("estadoJuego");
-    const ronda = document.getElementById("ronda");
-    const botonesJuego = document.querySelectorAll("#grupoInteractivo use");
+    const audioPermissionModal =
+        document.getElementById("audioPermissionModal");
+
+    const acceptAudioButton =
+        document.getElementById("acceptAudio");
+
+    const botonEmpezar =
+        document.getElementById("botonEmpezar");
+
+    const estadoJuego =
+        document.getElementById("estadoJuego");
+
+    const ronda =
+        document.getElementById("ronda");
+
+    const botonesJuego =
+        document.querySelectorAll("#grupoInteractivo use");
 
     let nivelSeleccionado = 'facil';
 
-    document.querySelectorAll('.nivel-item').forEach(item => {
+    /* =========================
+       SELECCIÓN DE NIVEL
+    ========================== */
 
-        item.addEventListener('click', function (e) {
+    document.querySelectorAll('.nivel-item')
+        .forEach(item => {
 
-            e.preventDefault();
+            item.addEventListener('click', function (e) {
 
-            nivelSeleccionado = this.getAttribute('data-nivel');
+                e.preventDefault();
 
-            const textos = {
-                facil: '1 🟢 Fácil — Normal',
-                medio: '2 🟡 Medio — Rápido',
-                dificil: '3 🔴 Difícil — ¡Super Veloz!'
-            };
+                nivelSeleccionado =
+                    this.getAttribute('data-nivel');
 
-            document.getElementById('dropdownNivel').textContent =
-                textos[nivelSeleccionado];
+                const textos = {
+
+                    facil:
+                        '1 🟢 Fácil — Normal',
+
+                    medio:
+                        '2 🟡 Medio — Rápido',
+
+                    dificil:
+                        '3 🔴 Difícil — ¡Super Veloz!'
+                };
+
+                document.getElementById('dropdownNivel')
+                    .textContent =
+                    textos[nivelSeleccionado];
+            });
         });
+
+    /* =========================
+       PERMISOS AUDIO
+    ========================== */
+
+    acceptAudioButton.addEventListener('click', async function () {
+
+        try {
+
+            const audio = new Audio(
+    'sounds_1.m4a'
+);
+
+            audio.volume = 1.0;
+
+            await audio.play();
+
+        } catch (e) {}
+
+        audioPermissionModal.style.display = 'none';
     });
 
-    acceptAudioButton.addEventListener('click', function () {
-
-        const audio = new Audio(
-            'https://quixo-sonidos.vercel.app/sounds_1.m4a'
-        );
-
-        audio.play()
-            .then(() => {
-
-                audioPermissionModal.style.display = 'none';
-
-            })
-            .catch(() => { });
-    });
+    /* =========================
+       ESPERAR
+    ========================== */
 
     const esperar = ms =>
         new Promise(res => setTimeout(res, ms));
+
+    /* =========================
+       CLASE QUIXO
+    ========================== */
 
     class Quixo {
 
         constructor() {
 
             this.secuencia = [];
+
             this.sonidosBoton = [];
 
             this.esperandoJugador = false;
+
             this.procesandoClic = false;
+
             this.inactividadTimeout = null;
+
             this.resolverClic = null;
 
             this.tiempoEncendido = 350;
+
             this.gap = 100;
+
             this.tiempoEspera = 8000;
 
             this.cargarSonidos();
+
             this.iniciar();
         }
 
+        /* =========================
+           CARGAR SONIDOS
+        ========================== */
+
         cargarSonidos() {
 
-            const urls = [
-                'https://quixo-sonidos.vercel.app/sounds_1.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_2.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_3.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_4.m4a',
-                'https://quixo-sonidos.vercel.app/sounds_error.m4a',
-                'https://quixo-sonidos.vercel.app/win.m4a'
-            ];
+           const urls = [
 
+    'sounds_1.m4a',
+    'sounds_2.m4a',
+    'sounds_3.m4a',
+    'sounds_4.m4a',
+    'sounds_error.m4a',
+    'win.m4a'
+];
             urls.forEach((url, i) => {
 
                 const audio = new Audio(url);
 
-audio.preload = "auto";
+                audio.preload = "auto";
 
-/* 🔊 volumen */
-audio.volume = 1.0;
+                audio.volume = 1.0;
 
-this.sonidosBoton[i] = audio;
+                this.sonidosBoton[i] = audio;
             });
         }
 
+        /* =========================
+           INICIAR
+        ========================== */
+
         iniciar() {
 
-            this.botones = Array.from(botonesJuego);
+            this.botones =
+                Array.from(botonesJuego);
 
             this.botones.forEach((boton, i) => {
 
@@ -115,15 +168,19 @@ this.sonidosBoton[i] = audio;
                 botonEmpezar.disabled = true;
 
                 this.iniciarJuego();
-
             });
         }
+
+        /* =========================
+           CONFIGURACIÓN NIVELES
+        ========================== */
 
         obtenerConfigNivel() {
 
             if (nivelSeleccionado === 'facil') {
 
                 return {
+
                     encendido: 400,
                     gap: 180,
                     espera: 8000,
@@ -134,6 +191,7 @@ this.sonidosBoton[i] = audio;
             if (nivelSeleccionado === 'medio') {
 
                 return {
+
                     encendido: 280,
                     gap: 110,
                     espera: 6000,
@@ -144,6 +202,7 @@ this.sonidosBoton[i] = audio;
             if (nivelSeleccionado === 'dificil') {
 
                 return {
+
                     encendido: 180,
                     gap: 80,
                     espera: 4000,
@@ -152,6 +211,7 @@ this.sonidosBoton[i] = audio;
             }
 
             return {
+
                 encendido: 400,
                 gap: 150,
                 espera: 8000,
@@ -159,21 +219,35 @@ this.sonidosBoton[i] = audio;
             };
         }
 
+        /* =========================
+           INICIAR JUEGO
+        ========================== */
+
         async iniciarJuego() {
 
-            const config = this.obtenerConfigNivel();
+            const config =
+                this.obtenerConfigNivel();
 
-            this.tiempoEncendido = config.encendido;
-            this.gap = config.gap;
-            this.tiempoEspera = config.espera;
+            this.tiempoEncendido =
+                config.encendido;
+
+            this.gap =
+                config.gap;
+
+            this.tiempoEspera =
+                config.espera;
 
             this.secuencia = Array.from(
+
                 { length: config.rondas },
+
                 () => Math.floor(Math.random() * 4)
             );
 
             this.esperandoJugador = false;
+
             this.procesandoClic = false;
+
             this.resolverClic = null;
 
             this.botones.forEach(b => {
@@ -182,7 +256,6 @@ this.sonidosBoton[i] = audio;
                     'fill',
                     b.getAttribute('data-color-inactivo')
                 );
-
             });
 
             ronda.textContent = 'Ronda: 1';
@@ -196,15 +269,22 @@ this.sonidosBoton[i] = audio;
             await this.bucleJuego();
         }
 
+        /* =========================
+           BUCLE JUEGO
+        ========================== */
+
         async bucleJuego() {
 
             for (let r = 0; r < this.secuencia.length; r++) {
 
-                ronda.textContent = `Ronda: ${r + 1}`;
+                ronda.textContent =
+                    `Ronda: ${r + 1}`;
 
-                estadoJuego.textContent = '👀 Mira...';
+                estadoJuego.textContent =
+                    '👀 Mira...';
 
-                estadoJuego.style.color = '#4682B4';
+                estadoJuego.style.color =
+                    '#4682B4';
 
                 for (let i = 0; i <= r; i++) {
 
@@ -217,9 +297,11 @@ this.sonidosBoton[i] = audio;
 
                 await esperar(300);
 
-                estadoJuego.textContent = '¡Tu turno!';
+                estadoJuego.textContent =
+                    '¡Tu turno!';
 
-                estadoJuego.style.color = '#28a745';
+                estadoJuego.style.color =
+                    '#28a745';
 
                 const resultado =
                     await this.turnoJugador(r);
@@ -231,6 +313,10 @@ this.sonidosBoton[i] = audio;
 
             this.ganarJuego();
         }
+
+        /* =========================
+           TURNO JUGADOR
+        ========================== */
 
         turnoJugador(rondaMax) {
 
@@ -250,12 +336,16 @@ this.sonidosBoton[i] = audio;
 
                     this.resolverClic = null;
 
-                    clearTimeout(this.inactividadTimeout);
+                    clearTimeout(
+                        this.inactividadTimeout
+                    );
                 };
 
                 const resetTimer = () => {
 
-                    clearTimeout(this.inactividadTimeout);
+                    clearTimeout(
+                        this.inactividadTimeout
+                    );
 
                     this.inactividadTimeout =
                         setTimeout(() => {
@@ -273,9 +363,14 @@ this.sonidosBoton[i] = audio;
 
                 this.resolverClic = async (indice) => {
 
-                    clearTimeout(this.inactividadTimeout);
+                    clearTimeout(
+                        this.inactividadTimeout
+                    );
 
-                    if (indice !== this.secuencia[posicion]) {
+                    if (
+                        indice !==
+                        this.secuencia[posicion]
+                    ) {
 
                         limpiar();
 
@@ -304,6 +399,10 @@ this.sonidosBoton[i] = audio;
             });
         }
 
+        /* =========================
+           RECIBIR CLIC
+        ========================== */
+
         recibirClic(indice) {
 
             if (this.resolverClic) {
@@ -312,30 +411,33 @@ this.sonidosBoton[i] = audio;
             }
         }
 
-        // ✅ AUDIO Y LUCES ESTABLES
+        /* =========================
+           ILUMINAR BOTÓN
+        ========================== */
+
         async iluminarBoton(indice) {
 
-            const boton = this.botones[indice];
-
-            const audio = this.sonidosBoton[indice];
+            const boton =
+                this.botones[indice];
 
             boton.setAttribute(
                 'fill',
                 boton.getAttribute('data-color-activo')
             );
 
-            if (audio) {
+            /* AUDIO ESTABLE */
 
-                try {
+            try {
 
-                    audio.pause();
+                const sonido =
+                    this.sonidosBoton[indice]
+                        .cloneNode();
 
-                    audio.currentTime = 0;
+                sonido.volume = 1.0;
 
-                    await audio.play();
+                sonido.play().catch(() => { });
 
-                } catch (e) {}
-            }
+            } catch (e) {}
 
             await esperar(this.tiempoEncendido);
 
@@ -345,9 +447,15 @@ this.sonidosBoton[i] = audio;
             );
         }
 
+        /* =========================
+           PERDER
+        ========================== */
+
         perderJuego() {
 
-            clearTimeout(this.inactividadTimeout);
+            clearTimeout(
+                this.inactividadTimeout
+            );
 
             this.esperandoJugador = false;
 
@@ -361,7 +469,6 @@ this.sonidosBoton[i] = audio;
                     'fill',
                     b.getAttribute('data-color-inactivo')
                 );
-
             });
 
             estadoJuego.textContent =
@@ -371,24 +478,33 @@ this.sonidosBoton[i] = audio;
 
             ronda.textContent = 'Ronda: 1';
 
-            const errorAudio = this.sonidosBoton[4];
+            /* AUDIO ERROR ESTABLE */
 
-            errorAudio.pause();
+            try {
 
-            errorAudio.currentTime = 0;
+                const errorAudio =
+                    this.sonidosBoton[4]
+                        .cloneNode();
 
-            setTimeout(() => {
+                errorAudio.volume = 1.0;
 
-                errorAudio.play().catch(() => { });
+                errorAudio.play()
+                    .catch(() => { });
 
-            }, 80);
+            } catch (e) {}
 
             botonEmpezar.disabled = false;
         }
 
+        /* =========================
+           GANAR
+        ========================== */
+
         ganarJuego() {
 
-            clearTimeout(this.inactividadTimeout);
+            clearTimeout(
+                this.inactividadTimeout
+            );
 
             this.esperandoJugador = false;
 
@@ -402,12 +518,13 @@ this.sonidosBoton[i] = audio;
                     'fill',
                     b.getAttribute('data-color-inactivo')
                 );
-
             });
 
-            const texto = "¡FELICIDADES GANASTE!";
+            const texto =
+                "¡FELICIDADES GANASTE!";
 
             const colores = [
+
                 '#FF0000',
                 '#FF7F00',
                 '#FFD700',
@@ -419,6 +536,7 @@ this.sonidosBoton[i] = audio;
             estadoJuego.innerHTML = texto
                 .split('')
                 .map((letra, i) =>
+
                     `<span style="
                         color:${colores[i % colores.length]};
                         font-weight:bold
@@ -432,9 +550,24 @@ this.sonidosBoton[i] = audio;
 
             ronda.textContent = 'Ronda: 1';
 
-            this.sonidosBoton[5].play().catch(() => { });
+            /* AUDIO GANAR ESTABLE */
+
+            try {
+
+                const winAudio =
+                    this.sonidosBoton[5]
+                        .cloneNode();
+
+                winAudio.volume = 1.0;
+
+                winAudio.play()
+                    .catch(() => { });
+
+            } catch (e) {}
 
             botonEmpezar.disabled = false;
+
+            /* CONFETI */
 
             let rafagas = 0;
 
@@ -443,22 +576,35 @@ this.sonidosBoton[i] = audio;
                 if (rafagas < 4) {
 
                     confetti({
+
                         particleCount: 40,
                         angle: 60,
                         spread: 55,
-                        origin: { x: 0, y: 0.6 }
+
+                        origin: {
+                            x: 0,
+                            y: 0.6
+                        }
                     });
 
                     confetti({
+
                         particleCount: 40,
                         angle: 120,
                         spread: 55,
-                        origin: { x: 1, y: 0.6 }
+
+                        origin: {
+                            x: 1,
+                            y: 0.6
+                        }
                     });
 
                     rafagas++;
 
-                    setTimeout(lanzar, 1000);
+                    setTimeout(
+                        lanzar,
+                        1000
+                    );
                 }
             };
 
@@ -466,14 +612,24 @@ this.sonidosBoton[i] = audio;
         }
     }
 
+    /* =========================
+       INICIAR JUEGO
+    ========================== */
+
     new Quixo();
 
-    // ✅ RECARGAR SI SALES Y REGRESAS
-    document.addEventListener("visibilitychange", () => {
+    /* =========================
+       RECARGAR SI REGRESA
+    ========================== */
 
-        if (!document.hidden) {
+    document.addEventListener(
+        "visibilitychange",
+        () => {
 
-            location.reload();
+            if (!document.hidden) {
+
+                location.reload();
+            }
         }
-    });
+    );
 });
