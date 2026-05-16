@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let nivelSeleccionado = 'facil';
 
     /* =========================
-       DESBLOQUEAR AUDIO EN MÓVIL
+       DESBLOQUEAR AUDIO
     ========================== */
 
     let audioDesbloqueado = false;
@@ -44,9 +44,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             for (const ruta of sonidos) {
 
-                const audio = new Audio(ruta);
+                const audio = new Audio();
+
+                audio.src = ruta;
 
                 audio.volume = 0;
+
+                audio.playsInline = true;
+
+                audio.setAttribute(
+                    "playsinline",
+                    "true"
+                );
 
                 await audio.play();
 
@@ -59,12 +68,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (e) {
 
-            console.log("Audio bloqueado:", e);
+            console.log(e);
         }
     }
 
     /* =========================
-       SELECCIÓN NIVEL
+       SELECCIÓN DE NIVEL
     ========================== */
 
     document.querySelectorAll('.nivel-item')
@@ -89,14 +98,15 @@ document.addEventListener('DOMContentLoaded', function () {
                         '3 🔴 Difícil — ¡Super Veloz!'
                 };
 
-                document.getElementById('dropdownNivel')
-                    .textContent =
+                document.getElementById(
+                    'dropdownNivel'
+                ).textContent =
                     textos[nivelSeleccionado];
             });
         });
 
     /* =========================
-       PERMISO AUDIO
+       MODAL AUDIO
     ========================== */
 
     acceptAudioButton.addEventListener(
@@ -112,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 audio.volume = 1.0;
 
-                await audio.play();
+                audio.play();
 
             } catch (e) {}
 
@@ -129,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
         new Promise(res => setTimeout(res, ms));
 
     /* =========================
-       CLASE QUIXO
+       QUIXO
     ========================== */
 
     class Quixo {
@@ -177,13 +187,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             urls.forEach((url, i) => {
 
-                const audio = new Audio(url);
+                const audio = new Audio();
+
+                audio.src = url;
 
                 audio.preload = "auto";
 
-                audio.volume = 1.0;
+                audio.playsInline = true;
 
-                audio.load();
+                audio.setAttribute(
+                    "playsinline",
+                    "true"
+                );
+
+                audio.volume = 1.0;
 
                 this.sonidosBoton[i] = audio;
             });
@@ -197,33 +214,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
             try {
 
-                const original =
+                const sonido =
                     this.sonidosBoton[indice];
 
-                if (!original) return;
+                if (!sonido) return;
 
-                const sonido =
-                    original.cloneNode(true);
-
-                sonido.volume = 1.0;
+                sonido.pause();
 
                 sonido.currentTime = 0;
 
-                const promesa = sonido.play();
+                sonido.volume = 1.0;
 
-                if (promesa !== undefined) {
+                const playPromise =
+                    sonido.play();
 
-                    promesa.catch(() => {
+                if (playPromise !== undefined) {
 
-                        document.body.addEventListener(
-                            'touchstart',
-                            () => {
+                    playPromise.catch(err => {
 
-                                sonido.play()
-                                    .catch(() => { });
-
-                            },
-                            { once: true }
+                        console.log(
+                            "Error reproduciendo:",
+                            err
                         );
                     });
                 }
@@ -254,11 +265,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 boton.addEventListener(
                     'click',
-                    () => {
+                    async () => {
 
-                        desbloquearAudio();
+                        await desbloquearAudio();
 
-                        if (this.esperandoJugador) {
+                        if (
+                            this.esperandoJugador
+                        ) {
 
                             this.recibirClic(i);
                         }
@@ -272,7 +285,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     await desbloquearAudio();
 
-                    botonEmpezar.disabled = true;
+                    botonEmpezar.disabled =
+                        true;
 
                     this.iniciarJuego();
                 }
@@ -349,12 +363,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 { length: config.rondas },
 
-                () => Math.floor(Math.random() * 4)
+                () => Math.floor(
+                    Math.random() * 4
+                )
             );
 
-            this.esperandoJugador = false;
+            this.esperandoJugador =
+                false;
 
-            this.procesandoClic = false;
+            this.procesandoClic =
+                false;
 
             this.resolverClic = null;
 
@@ -368,7 +386,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 );
             });
 
-            ronda.textContent = 'Ronda: 1';
+            ronda.textContent =
+                'Ronda: 1';
 
             estadoJuego.textContent =
                 '¡Atención!';
@@ -431,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
-           TURNO
+           TURNO JUGADOR
         ========================== */
 
         turnoJugador(rondaMax) {
@@ -440,15 +459,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 let posicion = 0;
 
-                this.esperandoJugador = true;
+                this.esperandoJugador =
+                    true;
+
+                this.procesandoClic =
+                    false;
 
                 const limpiar = () => {
 
-                    this.esperandoJugador = false;
+                    this.esperandoJugador =
+                        false;
 
-                    this.procesandoClic = false;
+                    this.procesandoClic =
+                        false;
 
-                    this.resolverClic = null;
+                    this.resolverClic =
+                        null;
 
                     clearTimeout(
                         this.inactividadTimeout
@@ -462,11 +488,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
 
                     this.inactividadTimeout =
-                        setTimeout(async () => {
+                        setTimeout(() => {
 
                             limpiar();
-
-                            await esperar(100);
 
                             this.perderJuego();
 
@@ -572,11 +596,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.inactividadTimeout
             );
 
-            this.esperandoJugador = false;
+            this.esperandoJugador =
+                false;
 
-            this.procesandoClic = false;
+            this.procesandoClic =
+                false;
 
-            this.resolverClic = null;
+            this.resolverClic =
+                null;
 
             this.botones.forEach(b => {
 
@@ -597,11 +624,12 @@ document.addEventListener('DOMContentLoaded', function () {
             ronda.textContent =
                 'Ronda: 1';
 
-            /* 🔥 SONIDO DE ERROR */
+            /* 🔥 SONIDO ERROR */
 
             this.reproducirSonido(4);
 
-            botonEmpezar.disabled = false;
+            botonEmpezar.disabled =
+                false;
         }
 
         /* =========================
@@ -614,11 +642,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.inactividadTimeout
             );
 
-            this.esperandoJugador = false;
+            this.esperandoJugador =
+                false;
 
-            this.procesandoClic = false;
+            this.procesandoClic =
+                false;
 
-            this.resolverClic = null;
+            this.resolverClic =
+                null;
 
             this.botones.forEach(b => {
 
@@ -664,7 +695,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.reproducirSonido(5);
 
-            botonEmpezar.disabled = false;
+            botonEmpezar.disabled =
+                false;
 
             let rafagas = 0;
 
