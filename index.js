@@ -21,7 +21,50 @@ document.addEventListener('DOMContentLoaded', function () {
     let nivelSeleccionado = 'facil';
 
     /* =========================
-       SELECCIÓN DE NIVEL
+       DESBLOQUEAR AUDIO EN MÓVIL
+    ========================== */
+
+    let audioDesbloqueado = false;
+
+    async function desbloquearAudio() {
+
+        if (audioDesbloqueado) return;
+
+        try {
+
+            const sonidos = [
+
+                'sounds_1.m4a',
+                'sounds_2.m4a',
+                'sounds_3.m4a',
+                'sounds_4.m4a',
+                'sounds_error.m4a',
+                'win.m4a'
+            ];
+
+            for (const ruta of sonidos) {
+
+                const audio = new Audio(ruta);
+
+                audio.volume = 0;
+
+                await audio.play();
+
+                audio.pause();
+
+                audio.currentTime = 0;
+            }
+
+            audioDesbloqueado = true;
+
+        } catch (e) {
+
+            console.log("Audio bloqueado:", e);
+        }
+    }
+
+    /* =========================
+       SELECCIÓN NIVEL
     ========================== */
 
     document.querySelectorAll('.nivel-item')
@@ -53,27 +96,30 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     /* =========================
-       ACTIVAR AUDIO IOS
+       PERMISO AUDIO
     ========================== */
 
-    acceptAudioButton.addEventListener('click', async function () {
+    acceptAudioButton.addEventListener(
+        'click',
+        async function () {
 
-        try {
+            await desbloquearAudio();
 
-            const audio = new Audio('sounds_1.m4a');
+            try {
 
-            audio.volume = 1.0;
+                const audio =
+                    new Audio('sounds_1.m4a');
 
-            await audio.play();
+                audio.volume = 1.0;
 
-            audio.pause();
+                await audio.play();
 
-            audio.currentTime = 0;
+            } catch (e) {}
 
-        } catch (e) {}
-
-        audioPermissionModal.style.display = 'none';
-    });
+            audioPermissionModal.style.display =
+                'none';
+        }
+    );
 
     /* =========================
        ESPERAR
@@ -144,6 +190,51 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
+           REPRODUCIR SONIDO
+        ========================== */
+
+        reproducirSonido(indice) {
+
+            try {
+
+                const original =
+                    this.sonidosBoton[indice];
+
+                if (!original) return;
+
+                const sonido =
+                    original.cloneNode(true);
+
+                sonido.volume = 1.0;
+
+                sonido.currentTime = 0;
+
+                const promesa = sonido.play();
+
+                if (promesa !== undefined) {
+
+                    promesa.catch(() => {
+
+                        document.body.addEventListener(
+                            'touchstart',
+                            () => {
+
+                                sonido.play()
+                                    .catch(() => { });
+
+                            },
+                            { once: true }
+                        );
+                    });
+                }
+
+            } catch (e) {
+
+                console.log(e);
+            }
+        }
+
+        /* =========================
            INICIAR
         ========================== */
 
@@ -156,24 +247,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 boton.setAttribute(
                     'fill',
-                    boton.getAttribute('data-color-inactivo')
+                    boton.getAttribute(
+                        'data-color-inactivo'
+                    )
                 );
 
-                boton.addEventListener('click', () => {
+                boton.addEventListener(
+                    'click',
+                    () => {
 
-                    if (this.esperandoJugador) {
+                        desbloquearAudio();
 
-                        this.recibirClic(i);
+                        if (this.esperandoJugador) {
+
+                            this.recibirClic(i);
+                        }
                     }
-                });
+                );
             });
 
-            botonEmpezar.addEventListener('click', () => {
+            botonEmpezar.addEventListener(
+                'click',
+                async () => {
 
-                botonEmpezar.disabled = true;
+                    await desbloquearAudio();
 
-                this.iniciarJuego();
-            });
+                    botonEmpezar.disabled = true;
+
+                    this.iniciarJuego();
+                }
+            );
         }
 
         /* =========================
@@ -259,15 +362,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 b.setAttribute(
                     'fill',
-                    b.getAttribute('data-color-inactivo')
+                    b.getAttribute(
+                        'data-color-inactivo'
+                    )
                 );
             });
 
             ronda.textContent = 'Ronda: 1';
 
-            estadoJuego.textContent = '¡Atención!';
+            estadoJuego.textContent =
+                '¡Atención!';
 
-            estadoJuego.style.color = '#4682B4';
+            estadoJuego.style.color =
+                '#4682B4';
 
             await esperar(600);
 
@@ -275,12 +382,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
-           BUCLE JUEGO
+           BUCLE
         ========================== */
 
         async bucleJuego() {
 
-            for (let r = 0; r < this.secuencia.length; r++) {
+            for (
+                let r = 0;
+                r < this.secuencia.length;
+                r++
+            ) {
 
                 ronda.textContent =
                     `Ronda: ${r + 1}`;
@@ -320,7 +431,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
-           TURNO JUGADOR
+           TURNO
         ========================== */
 
         turnoJugador(rondaMax) {
@@ -330,8 +441,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 let posicion = 0;
 
                 this.esperandoJugador = true;
-
-                this.procesandoClic = false;
 
                 const limpiar = () => {
 
@@ -357,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             limpiar();
 
-                            await this.sonarPerdida();
+                            await esperar(100);
 
                             this.perderJuego();
 
@@ -368,79 +477,51 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 resetTimer();
 
-                this.resolverClic = async (indice) => {
+                this.resolverClic =
+                    async (indice) => {
 
-                    clearTimeout(
-                        this.inactividadTimeout
-                    );
+                        clearTimeout(
+                            this.inactividadTimeout
+                        );
 
-                    if (
-                        indice !==
-                        this.secuencia[posicion]
-                    ) {
+                        if (
+                            indice !==
+                            this.secuencia[posicion]
+                        ) {
 
-                        limpiar();
+                            limpiar();
 
-                        await this.sonarPerdida();
+                            this.perderJuego();
 
-                        this.perderJuego();
+                            resolve(false);
 
-                        resolve(false);
+                            return;
+                        }
 
-                        return;
-                    }
+                        await this.iluminarBoton(
+                            indice
+                        );
 
-                    await this.iluminarBoton(indice);
+                        posicion++;
 
-                    posicion++;
+                        if (
+                            posicion > rondaMax
+                        ) {
 
-                    if (posicion > rondaMax) {
+                            limpiar();
 
-                        limpiar();
+                            resolve(true);
 
-                        resolve(true);
+                        } else {
 
-                    } else {
-
-                        resetTimer();
-                    }
-                };
+                            resetTimer();
+                        }
+                    };
             });
         }
 
         /* =========================
-           SONIDO PERDER
-        ========================== */
-
-        async sonarPerdida() {
-
-            try {
-
-                const audio = new Audio(
-                    'sounds_error.m4a'
-                );
-
-                audio.volume = 1.0;
-
-                audio.preload = "auto";
-
-                audio.load();
-
-                audio.currentTime = 0;
-
-                await audio.play();
-
-            } catch (e) {
-
-                console.log(
-                    "Error sonido perder",
-                    e
-                );
-            }
-        }
-
-        /* =========================
-           RECIBIR CLICK
+           RECIBIR CLIC
         ========================== */
 
         recibirClic(indice) {
@@ -452,7 +533,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
-           ILUMINAR BOTÓN
+           ILUMINAR
         ========================== */
 
         async iluminarBoton(indice) {
@@ -462,31 +543,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
             boton.setAttribute(
                 'fill',
-                boton.getAttribute('data-color-activo')
+                boton.getAttribute(
+                    'data-color-activo'
+                )
             );
 
-            try {
+            this.reproducirSonido(indice);
 
-                const sonido = new Audio(
-                    this.sonidosBoton[indice].src
-                );
-
-                sonido.volume = 1.0;
-
-                sonido.preload = "auto";
-
-                sonido.currentTime = 0;
-
-                sonido.play()
-                    .catch(() => { });
-
-            } catch (e) {}
-
-            await esperar(this.tiempoEncendido);
+            await esperar(
+                this.tiempoEncendido
+            );
 
             boton.setAttribute(
                 'fill',
-                boton.getAttribute('data-color-inactivo')
+                boton.getAttribute(
+                    'data-color-inactivo'
+                )
             );
         }
 
@@ -510,16 +582,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 b.setAttribute(
                     'fill',
-                    b.getAttribute('data-color-inactivo')
+                    b.getAttribute(
+                        'data-color-inactivo'
+                    )
                 );
             });
 
             estadoJuego.textContent =
                 '❌ Error. Inténtalo de nuevo.';
 
-            estadoJuego.style.color = 'red';
+            estadoJuego.style.color =
+                'red';
 
-            ronda.textContent = 'Ronda: 1';
+            ronda.textContent =
+                'Ronda: 1';
+
+            /* 🔥 SONIDO DE ERROR */
+
+            this.reproducirSonido(4);
 
             botonEmpezar.disabled = false;
         }
@@ -544,7 +624,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 b.setAttribute(
                     'fill',
-                    b.getAttribute('data-color-inactivo')
+                    b.getAttribute(
+                        'data-color-inactivo'
+                    )
                 );
             });
 
@@ -561,38 +643,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 '#8B00FF'
             ];
 
-            estadoJuego.innerHTML = texto
-                .split('')
-                .map((letra, i) =>
+            estadoJuego.innerHTML =
+                texto
+                    .split('')
+                    .map((letra, i) =>
 
-                    `<span style="
-                        color:${colores[i % colores.length]};
-                        font-weight:bold
-                    ">
-                        ${letra === ' '
-                            ? '&nbsp;'
-                            : letra}
-                    </span>`
-                )
-                .join('');
+                        `<span style="
+                            color:${colores[i % colores.length]};
+                            font-weight:bold
+                        ">
+                            ${letra === ' '
+                                ? '&nbsp;'
+                                : letra}
+                        </span>`
+                    )
+                    .join('');
 
-            ronda.textContent = 'Ronda: 1';
+            ronda.textContent =
+                'Ronda: 1';
 
-            try {
-
-                const winAudio =
-                    new Audio('win.m4a');
-
-                winAudio.volume = 1.0;
-
-                winAudio.play()
-                    .catch(() => { });
-
-            } catch (e) {}
+            this.reproducirSonido(5);
 
             botonEmpezar.disabled = false;
-
-            /* CONFETI */
 
             let rafagas = 0;
 
@@ -644,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function () {
     new Quixo();
 
     /* =========================
-       RECARGAR SI REGRESA
+       RECARGAR
     ========================== */
 
     document.addEventListener(
