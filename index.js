@@ -53,22 +53,40 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     /* =========================
-       PERMISOS AUDIO
+       DESBLOQUEAR AUDIOS MOVIL
     ========================== */
 
     acceptAudioButton.addEventListener('click', async function () {
 
-        try {
+        const sonidos = [
 
-            const audio = new Audio(
-    'sounds_1.m4a'
-);
+            'sounds_1.m4a',
+            'sounds_2.m4a',
+            'sounds_3.m4a',
+            'sounds_4.m4a',
+            'sounds_error.m4a',
+            'win.m4a'
+        ];
 
-            audio.volume = 1.0;
+        for (const ruta of sonidos) {
 
-            await audio.play();
+            try {
 
-        } catch (e) {}
+                const audio = new Audio(ruta);
+
+                audio.volume = 0;
+
+                await audio.play();
+
+                audio.pause();
+
+                audio.currentTime = 0;
+
+            } catch (e) {
+
+                console.log(e);
+            }
+        }
 
         audioPermissionModal.style.display = 'none';
     });
@@ -104,7 +122,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.gap = 100;
 
-            this.tiempoEspera = 8000;
+            this.tiempoEspera = 10000;
 
             this.cargarSonidos();
 
@@ -117,15 +135,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         cargarSonidos() {
 
-           const urls = [
+            const urls = [
 
-    'sounds_1.m4a',
-    'sounds_2.m4a',
-    'sounds_3.m4a',
-    'sounds_4.m4a',
-    'sounds_error.m4a',
-    'win.m4a'
-];
+                'sounds_1.m4a',
+                'sounds_2.m4a',
+                'sounds_3.m4a',
+                'sounds_4.m4a',
+                'sounds_error.m4a',
+                'win.m4a'
+            ];
+
             urls.forEach((url, i) => {
 
                 const audio = new Audio(url);
@@ -183,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     encendido: 400,
                     gap: 180,
-                    espera: 8000,
+                    espera: 10000,
                     rondas: 6
                 };
             }
@@ -194,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     encendido: 280,
                     gap: 110,
-                    espera: 6000,
+                    espera: 10000,
                     rondas: 12
                 };
             }
@@ -205,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     encendido: 180,
                     gap: 80,
-                    espera: 4000,
+                    espera: 10000,
                     rondas: 18
                 };
             }
@@ -214,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 encendido: 400,
                 gap: 150,
-                espera: 8000,
+                espera: 10000,
                 rondas: 8
             };
         }
@@ -425,17 +444,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 boton.getAttribute('data-color-activo')
             );
 
-            /* AUDIO ESTABLE */
-
             try {
 
                 const sonido =
-                    this.sonidosBoton[indice]
-                        .cloneNode();
+                    this.sonidosBoton[indice];
 
-                sonido.volume = 1.0;
+                sonido.currentTime = 0;
 
-                sonido.play().catch(() => { });
+                sonido.play()
+                    .catch(() => { });
 
             } catch (e) {}
 
@@ -450,78 +467,49 @@ document.addEventListener('DOMContentLoaded', function () {
         /* =========================
            PERDER
         ========================== */
-/* =========================
-   PERDER
-========================== */
 
-perderJuego() {
+        perderJuego() {
 
-    clearTimeout(
-        this.inactividadTimeout
-    );
+            clearTimeout(
+                this.inactividadTimeout
+            );
 
-    this.esperandoJugador = false;
+            this.esperandoJugador = false;
 
-    this.procesandoClic = false;
+            this.procesandoClic = false;
 
-    this.resolverClic = null;
+            this.resolverClic = null;
 
-    this.botones.forEach(b => {
+            this.botones.forEach(b => {
 
-        b.setAttribute(
-            'fill',
-            b.getAttribute('data-color-inactivo')
-        );
-    });
+                b.setAttribute(
+                    'fill',
+                    b.getAttribute('data-color-inactivo')
+                );
+            });
 
-    estadoJuego.textContent =
-        '❌ Error. Inténtalo de nuevo.';
+            estadoJuego.textContent =
+                '❌ Error. Inténtalo de nuevo.';
 
-    estadoJuego.style.color = 'red';
+            estadoJuego.style.color = 'red';
 
-    ronda.textContent = 'Ronda: 1';
+            ronda.textContent = 'Ronda: 1';
 
-    /* =========================
-       AUDIO ERROR ANDROID/IPHONE
-    ========================== */
+            try {
 
-    try {
+                const errorAudio =
+                    this.sonidosBoton[4];
 
-        const errorAudio = new Audio(
-            'sounds_error.m4a'
-        );
+                errorAudio.currentTime = 0;
 
-        errorAudio.volume = 1.0;
+                errorAudio.play()
+                    .catch(() => { });
 
-        errorAudio.currentTime = 0;
+            } catch (e) {}
 
-        errorAudio.load();
-
-        const playPromise =
-            errorAudio.play();
-
-        if (playPromise !== undefined) {
-
-            playPromise
-                .then(() => {})
-                .catch(() => {
-
-                    setTimeout(() => {
-
-                        errorAudio.play()
-                            .catch(() => {});
-
-                    }, 120);
-                });
+            botonEmpezar.disabled = false;
         }
 
-    } catch (e) {
-
-        console.log(e);
-    }
-
-    botonEmpezar.disabled = false;
-}
         /* =========================
            GANAR
         ========================== */
@@ -576,15 +564,12 @@ perderJuego() {
 
             ronda.textContent = 'Ronda: 1';
 
-            /* AUDIO GANAR ESTABLE */
-
             try {
 
                 const winAudio =
-                    this.sonidosBoton[5]
-                        .cloneNode();
+                    this.sonidosBoton[5];
 
-                winAudio.volume = 1.0;
+                winAudio.currentTime = 0;
 
                 winAudio.play()
                     .catch(() => { });
@@ -592,8 +577,6 @@ perderJuego() {
             } catch (e) {}
 
             botonEmpezar.disabled = false;
-
-            /* CONFETI */
 
             let rafagas = 0;
 
