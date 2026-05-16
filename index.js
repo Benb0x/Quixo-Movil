@@ -450,8 +450,11 @@ document.addEventListener('DOMContentLoaded', function () {
         /* =========================
            PERDER
         ========================== */
+/* =========================
+   PERDER
+========================== */
 
-        perderJuego() {
+perderJuego() {
 
     clearTimeout(
         this.inactividadTimeout
@@ -478,28 +481,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
     ronda.textContent = 'Ronda: 1';
 
-    /* 🔊 SONIDO ERROR TELÉFONO */
+    /* =========================
+       AUDIO ERROR ANDROID/IPHONE
+    ========================== */
 
     try {
 
-        const errorAudio =
-            this.sonidosBoton[4];
+        const errorAudio = new Audio(
+            'sounds_error.m4a'
+        );
 
-        errorAudio.pause();
+        errorAudio.volume = 1.0;
 
         errorAudio.currentTime = 0;
 
-        errorAudio.volume = 1.0;
+        errorAudio.load();
 
         const playPromise =
             errorAudio.play();
 
         if (playPromise !== undefined) {
 
-            playPromise.catch(() => {});
+            playPromise
+                .then(() => {})
+                .catch(() => {
+
+                    setTimeout(() => {
+
+                        errorAudio.play()
+                            .catch(() => {});
+
+                    }, 120);
+                });
         }
 
-    } catch (e) {}
+    } catch (e) {
+
+        console.log(e);
+    }
 
     botonEmpezar.disabled = false;
 }
