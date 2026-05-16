@@ -53,26 +53,20 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     /* =========================
-       DESBLOQUEAR AUDIO
+       PERMISOS AUDIO
     ========================== */
-
-    let audioDesbloqueado = false;
 
     acceptAudioButton.addEventListener('click', async function () {
 
         try {
 
-            const audio = new Audio('sounds_1.m4a');
+            const audio = new Audio(
+    'sounds_1.m4a'
+);
 
             audio.volume = 1.0;
 
             await audio.play();
-
-            audio.pause();
-
-            audio.currentTime = 0;
-
-            audioDesbloqueado = true;
 
         } catch (e) {}
 
@@ -80,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     /* =========================
-       FUNCIÓN ESPERAR
+       ESPERAR
     ========================== */
 
     const esperar = ms =>
@@ -110,7 +104,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.gap = 100;
 
-            this.tiempoEspera = 10000;
+            this.tiempoEspera = 8000;
 
             this.cargarSonidos();
 
@@ -123,16 +117,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         cargarSonidos() {
 
-            const urls = [
+           const urls = [
 
-                'sounds_1.m4a',
-                'sounds_2.m4a',
-                'sounds_3.m4a',
-                'sounds_4.m4a',
-                'sounds_error.m4a',
-                'win.m4a'
-            ];
-
+    'sounds_1.m4a',
+    'sounds_2.m4a',
+    'sounds_3.m4a',
+    'sounds_4.m4a',
+    'sounds_error.m4a',
+    'win.m4a'
+];
             urls.forEach((url, i) => {
 
                 const audio = new Audio(url);
@@ -141,40 +134,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 audio.volume = 1.0;
 
-                audio.load();
-
                 this.sonidosBoton[i] = audio;
             });
-        }
-
-        /* =========================
-           REPRODUCIR SONIDO
-        ========================== */
-
-        reproducirSonido(indice) {
-
-            try {
-
-                const sonidoOriginal =
-                    this.sonidosBoton[indice];
-
-                if (!sonidoOriginal) return;
-
-                const sonido =
-                    sonidoOriginal.cloneNode(true);
-
-                sonido.volume = 1.0;
-
-                sonido.currentTime = 0;
-
-                const promesa = sonido.play();
-
-                if (promesa !== undefined) {
-
-                    promesa.catch(() => {});
-                }
-
-            } catch (e) {}
         }
 
         /* =========================
@@ -187,8 +148,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 Array.from(botonesJuego);
 
             this.botones.forEach((boton, i) => {
-
-                /* COLORES INICIALES */
 
                 boton.setAttribute(
                     'fill',
@@ -224,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     encendido: 400,
                     gap: 180,
-                    espera: 10000,
+                    espera: 8000,
                     rondas: 6
                 };
             }
@@ -235,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     encendido: 280,
                     gap: 110,
-                    espera: 10000,
+                    espera: 6000,
                     rondas: 12
                 };
             }
@@ -246,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     encendido: 180,
                     gap: 80,
-                    espera: 10000,
+                    espera: 4000,
                     rondas: 18
                 };
             }
@@ -255,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 encendido: 400,
                 gap: 150,
-                espera: 10000,
+                espera: 8000,
                 rondas: 8
             };
         }
@@ -311,7 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
-           BUCLE PRINCIPAL
+           BUCLE JUEGO
         ========================== */
 
         async bucleJuego() {
@@ -466,7 +425,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 boton.getAttribute('data-color-activo')
             );
 
-            this.reproducirSonido(indice);
+            /* AUDIO ESTABLE */
+
+            try {
+
+                const sonido =
+                    this.sonidosBoton[indice]
+                        .cloneNode();
+
+                sonido.volume = 1.0;
+
+                sonido.play().catch(() => { });
+
+            } catch (e) {}
 
             await esperar(this.tiempoEncendido);
 
@@ -477,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         /* =========================
-           PERDER JUEGO
+           PERDER
         ========================== */
 
         perderJuego() {
@@ -507,19 +478,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            /* 🔥 IMPORTANTE PARA TELÉFONOS */
+            /* AUDIO ERROR ESTABLE */
 
-            setTimeout(() => {
+            try {
 
-                this.reproducirSonido(4);
+                const errorAudio =
+                    this.sonidosBoton[4]
+                        .cloneNode();
 
-            }, 120);
+                errorAudio.volume = 1.0;
+
+                errorAudio.play()
+                    .catch(() => { });
+
+            } catch (e) {}
 
             botonEmpezar.disabled = false;
         }
 
         /* =========================
-           GANAR JUEGO
+           GANAR
         ========================== */
 
         ganarJuego() {
@@ -572,7 +550,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            this.reproducirSonido(5);
+            /* AUDIO GANAR ESTABLE */
+
+            try {
+
+                const winAudio =
+                    this.sonidosBoton[5]
+                        .cloneNode();
+
+                winAudio.volume = 1.0;
+
+                winAudio.play()
+                    .catch(() => { });
+
+            } catch (e) {}
 
             botonEmpezar.disabled = false;
 
@@ -622,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* =========================
-       CREAR JUEGO
+       INICIAR JUEGO
     ========================== */
 
     new Quixo();
