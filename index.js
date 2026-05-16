@@ -453,49 +453,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
         perderJuego() {
 
-            clearTimeout(
-                this.inactividadTimeout
-            );
+    clearTimeout(
+        this.inactividadTimeout
+    );
 
-            this.esperandoJugador = false;
+    this.esperandoJugador = false;
 
-            this.procesandoClic = false;
+    this.procesandoClic = false;
 
-            this.resolverClic = null;
+    this.resolverClic = null;
 
-            this.botones.forEach(b => {
+    this.botones.forEach(b => {
 
-                b.setAttribute(
-                    'fill',
-                    b.getAttribute('data-color-inactivo')
-                );
-            });
+        b.setAttribute(
+            'fill',
+            b.getAttribute('data-color-inactivo')
+        );
+    });
 
-            estadoJuego.textContent =
-                '❌ Error. Inténtalo de nuevo.';
+    estadoJuego.textContent =
+        '❌ Error. Inténtalo de nuevo.';
 
-            estadoJuego.style.color = 'red';
+    estadoJuego.style.color = 'red';
 
-            ronda.textContent = 'Ronda: 1';
+    ronda.textContent = 'Ronda: 1';
 
-            /* AUDIO ERROR ESTABLE */
+    /* 🔊 SONIDO ERROR TELÉFONO */
 
-            try {
+    try {
 
-                const errorAudio =
-                    this.sonidosBoton[4]
-                        .cloneNode();
+        const errorAudio =
+            this.sonidosBoton[4];
 
-                errorAudio.volume = 1.0;
+        errorAudio.pause();
 
-                errorAudio.play()
-                    .catch(() => { });
+        errorAudio.currentTime = 0;
 
-            } catch (e) {}
+        errorAudio.volume = 1.0;
 
-            botonEmpezar.disabled = false;
+        const playPromise =
+            errorAudio.play();
+
+        if (playPromise !== undefined) {
+
+            playPromise.catch(() => {});
         }
 
+    } catch (e) {}
+
+    botonEmpezar.disabled = false;
+}
         /* =========================
            GANAR
         ========================== */
