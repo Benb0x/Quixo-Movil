@@ -1,553 +1,484 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    const audioPermissionModal =
-        document.getElementById("audioPermissionModal");
+    const audioPermissionModal = document.getElementById("audioPermissionModal");
+    const acceptAudioButton = document.getElementById("acceptAudio");
+    const botonEmpezar = document.getElementById("botonEmpezar");
+    const estadoJuego = document.getElementById("estadoJuego");
+    const ronda = document.getElementById("ronda");
+    const botonesJuego = document.querySelectorAll("#grupoInteractivo use");
 
-    const acceptAudioButton =
-        document.getElementById("acceptAudio");
+    const mensajesPositivos = [
+        "¡Bien hecho!",
+        "¡Excelente!",
+        "¡Sigue así!",
+        "¡Muy bien!",
+        "¡Continúa!"
+    ];
 
-    const botonEmpezar =
-        document.getElementById("botonEmpezar");
+    acceptAudioButton.addEventListener('click', function () {
 
-    const estadoJuego =
-        document.getElementById("estadoJuego");
+        const audio = new Audio(
+            'https://quixo-sonidos.vercel.app/sounds_1.m4a'
+        );
 
-    const ronda =
-        document.getElementById("ronda");
+        audio.play()
+            .then(() => {
 
-    const botonesJuego =
-        document.querySelectorAll("#grupoInteractivo use");
+                audioPermissionModal.style.display = 'none';
 
-    let nivelSeleccionado = 'facil';
+            })
+            .catch(() => {
 
-    /* =========================
-       SELECCIÓN DE NIVEL
-    ========================== */
-
-    document.querySelectorAll('.nivel-item')
-        .forEach(item => {
-
-            item.addEventListener('click', function (e) {
-
-                e.preventDefault();
-
-                nivelSeleccionado =
-                    this.getAttribute('data-nivel');
-
-                const textos = {
-
-                    facil:
-                        '1 🟢 Fácil — Normal',
-
-                    medio:
-                        '2 🟡 Medio — Rápido',
-
-                    dificil:
-                        '3 🔴 Difícil — ¡Super Veloz!'
-                };
-
-                document.getElementById('dropdownNivel')
-                    .textContent =
-                    textos[nivelSeleccionado];
+                console.error("Error al habilitar el sonido.");
             });
-        });
-
-    /* =========================
-       DESBLOQUEAR AUDIOS MOVIL
-    ========================== */
-
-    acceptAudioButton.addEventListener('click', async function () {
-
-        const sonidos = [
-
-            'sounds_1.m4a',
-            'sounds_2.m4a',
-            'sounds_3.m4a',
-            'sounds_4.m4a',
-            'sounds_error.m4a',
-            'win.m4a'
-        ];
-
-        for (const ruta of sonidos) {
-
-            try {
-
-                const audio = new Audio(ruta);
-
-                audio.volume = 0;
-
-                await audio.play();
-
-                audio.pause();
-
-                audio.currentTime = 0;
-
-            } catch (e) {
-
-                console.log(e);
-            }
-        }
-
-        audioPermissionModal.style.display = 'none';
     });
-
-    /* =========================
-       ESPERAR
-    ========================== */
-
-    const esperar = ms =>
-        new Promise(res => setTimeout(res, ms));
-
-    /* =========================
-       CLASE QUIXO
-    ========================== */
 
     class Quixo {
 
         constructor() {
 
+            this.rondaActual = 0;
+            this.posicionUsuario = 0;
             this.secuencia = [];
-
+            this.velocidad = 1000;
+            this.botonesBloqueados = true;
             this.sonidosBoton = [];
-
-            this.esperandoJugador = false;
-
-            this.procesandoClic = false;
-
             this.inactividadTimeout = null;
+            this.juegoTerminado = false;
 
-            this.resolverClic = null;
+            this.mostrandoSecuencia = false;
+            this.intervaloSecuencia = null;
 
-            this.tiempoEncendido = 350;
-
-            this.gap = 100;
-
-            this.tiempoEspera = 10000;
+            this.display = {
+                botonEmpezar,
+                ronda,
+                estadoJuego
+            };
 
             this.cargarSonidos();
-
             this.iniciar();
         }
 
-        /* =========================
-           CARGAR SONIDOS
-        ========================== */
-
         cargarSonidos() {
 
-            const urls = [
+            const sonidos = [
 
-                'sounds_1.m4a',
-                'sounds_2.m4a',
-                'sounds_3.m4a',
-                'sounds_4.m4a',
-                'sounds_error.m4a',
-                'win.m4a'
+                'https://quixo-sonidos.vercel.app/sounds_1.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_2.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_3.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_4.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_error.m4a',
+                'https://quixo-sonidos.vercel.app/win.m4a'
             ];
 
-            urls.forEach((url, i) => {
+            sonidos.forEach((sonido, indice) => {
 
-                const audio = new Audio(url);
+                const audio = new Audio(sonido);
 
                 audio.preload = "auto";
+                audio.crossOrigin = 'anonymous';
 
-                audio.volume = 1.0;
-
-                this.sonidosBoton[i] = audio;
+                this.sonidosBoton[indice] = audio;
             });
         }
 
-        /* =========================
-           INICIAR
-        ========================== */
-
         iniciar() {
 
-            this.botones =
-                Array.from(botonesJuego);
+            this.display.botonEmpezar
+                .addEventListener('click', () => {
 
-            this.botones.forEach((boton, i) => {
+                    this.display.botonEmpezar.disabled = true;
+
+                    this.reiniciarJuego();
+                });
+
+            this.botones = Array.from(botonesJuego);
+
+            this.botones.forEach(boton => {
 
                 boton.setAttribute(
                     'fill',
                     boton.getAttribute('data-color-inactivo')
                 );
 
-                boton.addEventListener('click', () => {
+                boton.addEventListener('click', (event) => {
 
-                    if (this.esperandoJugador) {
+                    if (
+                        !this.botonesBloqueados &&
+                        !this.mostrandoSecuencia
+                    ) {
 
-                        this.recibirClic(i);
+                        const indice =
+                            this.botones.indexOf(
+                                event.currentTarget
+                            );
+
+                        this.validarColorElegido(indice);
                     }
                 });
             });
-
-            botonEmpezar.addEventListener('click', () => {
-
-                botonEmpezar.disabled = true;
-
-                this.iniciarJuego();
-            });
         }
 
-        /* =========================
-           CONFIGURACIÓN NIVELES
-        ========================== */
+        generarSecuenciaAleatoria(longitud) {
 
-        obtenerConfigNivel() {
+            const secuencia = [];
 
-            if (nivelSeleccionado === 'facil') {
+            for (let i = 0; i < longitud; i++) {
 
-                return {
+                const colorAleatorio =
+                    Math.floor(Math.random() * 4);
 
-                    encendido: 400,
-                    gap: 180,
-                    espera: 10000,
-                    rondas: 6
-                };
+                secuencia.push(colorAleatorio);
             }
 
-            if (nivelSeleccionado === 'medio') {
-
-                return {
-
-                    encendido: 280,
-                    gap: 110,
-                    espera: 10000,
-                    rondas: 12
-                };
-            }
-
-            if (nivelSeleccionado === 'dificil') {
-
-                return {
-
-                    encendido: 180,
-                    gap: 80,
-                    espera: 10000,
-                    rondas: 18
-                };
-            }
-
-            return {
-
-                encendido: 400,
-                gap: 150,
-                espera: 10000,
-                rondas: 8
-            };
+            return secuencia;
         }
 
-        /* =========================
-           INICIAR JUEGO
-        ========================== */
+        reiniciarJuego() {
 
-        async iniciarJuego() {
+            this.juegoTerminado = false;
 
-            const config =
-                this.obtenerConfigNivel();
+            this.limpiarEstado();
 
-            this.tiempoEncendido =
-                config.encendido;
+            this.secuencia =
+                this.generarSecuenciaAleatoria(10);
 
-            this.gap =
-                config.gap;
+            this.rondaActual = 0;
+            this.posicionUsuario = 0;
+            this.botonesBloqueados = true;
+            this.mostrandoSecuencia = false;
 
-            this.tiempoEspera =
-                config.espera;
+            this.display.estadoJuego.textContent = '';
 
-            this.secuencia = Array.from(
+            this.display.estadoJuego.style.color =
+                '#4682B4';
 
-                { length: config.rondas },
-
-                () => Math.floor(Math.random() * 4)
+            this.actualizarEstado(
+                "¡Vamos a empezar!",
+                0
             );
 
-            this.esperandoJugador = false;
+            this.mostrarSecuencia();
+        }
 
-            this.procesandoClic = false;
+        limpiarEstado() {
 
-            this.resolverClic = null;
+            clearTimeout(this.inactividadTimeout);
 
-            this.botones.forEach(b => {
+            if (this.intervaloSecuencia) {
 
-                b.setAttribute(
+                clearInterval(this.intervaloSecuencia);
+
+                this.intervaloSecuencia = null;
+            }
+
+            this.mostrandoSecuencia = false;
+
+            this.botonesBloqueados = true;
+
+            this.posicionUsuario = 0;
+
+            this.rondaActual = 0;
+
+            if (this.botones) {
+
+                this.botones.forEach(boton => {
+
+                    boton.setAttribute(
+                        'fill',
+                        boton.getAttribute(
+                            'data-color-inactivo'
+                        )
+                    );
+                });
+            }
+        }
+
+        actualizarEstado(mensaje, ronda) {
+
+            const mensajePositivo =
+                mensajesPositivos[
+                    Math.floor(
+                        Math.random() *
+                        mensajesPositivos.length
+                    )
+                ];
+
+            this.display.estadoJuego.textContent =
+                `${mensajePositivo} Siguiente ronda: ${ronda + 1}`;
+
+            this.display.estadoJuego.style.display =
+                'block';
+        }
+
+        validarColorElegido(indice) {
+
+            clearTimeout(this.inactividadTimeout);
+
+            if (
+                this.secuencia[this.posicionUsuario]
+                === indice
+            ) {
+
+                this.alternarEstiloBoton(
+                    this.botones[indice],
+                    true
+                );
+
+                this.reproducirSonido(indice);
+
+                setTimeout(() => {
+
+                    this.alternarEstiloBoton(
+                        this.botones[indice],
+                        false
+                    );
+
+                }, this.velocidad / 2);
+
+                this.posicionUsuario++;
+
+                if (
+                    this.posicionUsuario >
+                    this.rondaActual
+                ) {
+
+                    this.rondaActual++;
+
+                    if (
+                        this.rondaActual <
+                        this.secuencia.length
+                    ) {
+
+                        this.actualizarEstado(
+                            "¡Muy bien!",
+                            this.rondaActual
+                        );
+
+                        this.botonesBloqueados = true;
+
+                        setTimeout(() => {
+
+                            if (
+                                !this.mostrandoSecuencia
+                            ) {
+
+                                this.mostrarSecuencia();
+                            }
+
+                        }, this.velocidad);
+
+                    } else {
+
+                        this.ganarJuego();
+
+                        return;
+                    }
+                }
+
+            } else {
+
+                this.perderJuego();
+
+                return;
+            }
+
+            if (!this.juegoTerminado) {
+
+                this.inactividadTimeout =
+                    setTimeout(() => {
+
+                        this.perderJuego();
+
+                    }, 5000);
+            }
+        }
+
+        mostrarSecuencia() {
+
+            if (this.mostrandoSecuencia) return;
+
+            this.mostrandoSecuencia = true;
+
+            this.botonesBloqueados = true;
+
+            clearTimeout(this.inactividadTimeout);
+
+            let indiceSecuencia = 0;
+
+            if (this.intervaloSecuencia) {
+
+                clearInterval(this.intervaloSecuencia);
+
+                this.intervaloSecuencia = null;
+            }
+
+            this.botones.forEach(boton => {
+
+                boton.setAttribute(
                     'fill',
-                    b.getAttribute('data-color-inactivo')
+                    boton.getAttribute(
+                        'data-color-inactivo'
+                    )
                 );
             });
 
-            ronda.textContent = 'Ronda: 1';
+            this.intervaloSecuencia = setInterval(() => {
 
-            estadoJuego.textContent = '¡Atención!';
+                if (indiceSecuencia > 0) {
 
-            estadoJuego.style.color = '#4682B4';
+                    const anterior =
+                        this.secuencia[
+                            indiceSecuencia - 1
+                        ];
 
-            await esperar(600);
-
-            await this.bucleJuego();
-        }
-
-        /* =========================
-           BUCLE JUEGO
-        ========================== */
-
-        async bucleJuego() {
-
-            for (let r = 0; r < this.secuencia.length; r++) {
-
-                ronda.textContent =
-                    `Ronda: ${r + 1}`;
-
-                estadoJuego.textContent =
-                    '👀 Mira...';
-
-                estadoJuego.style.color =
-                    '#4682B4';
-
-                for (let i = 0; i <= r; i++) {
-
-                    await esperar(this.gap);
-
-                    await this.iluminarBoton(
-                        this.secuencia[i]
+                    this.alternarEstiloBoton(
+                        this.botones[anterior],
+                        false
                     );
                 }
 
-                await esperar(300);
+                if (
+                    indiceSecuencia <=
+                    this.rondaActual
+                ) {
 
-                estadoJuego.textContent =
-                    '¡Tu turno!';
+                    const indiceColor =
+                        this.secuencia[indiceSecuencia];
 
-                estadoJuego.style.color =
-                    '#28a745';
-
-                const resultado =
-                    await this.turnoJugador(r);
-
-                if (!resultado) return;
-
-                await esperar(400);
-            }
-
-            this.ganarJuego();
-        }
-
-        /* =========================
-           TURNO JUGADOR
-        ========================== */
-
-        turnoJugador(rondaMax) {
-
-            return new Promise((resolve) => {
-
-                let posicion = 0;
-
-                this.esperandoJugador = true;
-
-                this.procesandoClic = false;
-
-                const limpiar = () => {
-
-                    this.esperandoJugador = false;
-
-                    this.procesandoClic = false;
-
-                    this.resolverClic = null;
-
-                    clearTimeout(
-                        this.inactividadTimeout
+                    this.alternarEstiloBoton(
+                        this.botones[indiceColor],
+                        true
                     );
-                };
 
-                const resetTimer = () => {
-
-                    clearTimeout(
-                        this.inactividadTimeout
+                    this.reproducirSonido(
+                        indiceColor
                     );
+
+                    indiceSecuencia++;
+
+                } else {
+
+                    clearInterval(
+                        this.intervaloSecuencia
+                    );
+
+                    this.intervaloSecuencia = null;
+
+                    const ultimoIndice =
+                        this.secuencia[
+                            this.rondaActual
+                        ];
+
+                    this.alternarEstiloBoton(
+                        this.botones[ultimoIndice],
+                        false
+                    );
+
+                    this.botonesBloqueados = false;
+
+                    this.posicionUsuario = 0;
+
+                    this.mostrandoSecuencia = false;
 
                     this.inactividadTimeout =
                         setTimeout(() => {
 
-                            try {
+                            this.perderJuego();
 
-                                const errorAudio =
-                                    this.sonidosBoton[4];
+                        }, 5000);
+                }
 
-                                errorAudio.currentTime = 0;
-
-                                errorAudio.play()
-                                    .catch(() => {});
-
-                            } catch (e) {}
-
-                            limpiar();
-
-                            this.perderJuego(false);
-
-                            resolve(false);
-
-                        }, this.tiempoEspera);
-                };
-
-                resetTimer();
-
-                this.resolverClic = async (indice) => {
-
-                    clearTimeout(
-                        this.inactividadTimeout
-                    );
-
-                    if (
-                        indice !==
-                        this.secuencia[posicion]
-                    ) {
-
-                        limpiar();
-
-                        this.perderJuego(true);
-
-                        resolve(false);
-
-                        return;
-                    }
-
-                    await this.iluminarBoton(indice);
-
-                    posicion++;
-
-                    if (posicion > rondaMax) {
-
-                        limpiar();
-
-                        resolve(true);
-
-                    } else {
-
-                        resetTimer();
-                    }
-                };
-            });
+            }, this.velocidad);
         }
 
-        /* =========================
-           RECIBIR CLIC
-        ========================== */
+        alternarEstiloBoton(boton, activar) {
 
-        recibirClic(indice) {
+            if (activar) {
 
-            if (this.resolverClic) {
-
-                this.resolverClic(indice);
-            }
-        }
-
-        /* =========================
-           ILUMINAR BOTÓN
-        ========================== */
-
-        async iluminarBoton(indice) {
-
-            const boton =
-                this.botones[indice];
-
-            boton.setAttribute(
-                'fill',
-                boton.getAttribute('data-color-activo')
-            );
-
-            try {
-
-                const sonido =
-                    this.sonidosBoton[indice];
-
-                sonido.currentTime = 0;
-
-                sonido.play()
-                    .catch(() => { });
-
-            } catch (e) {}
-
-            await esperar(this.tiempoEncendido);
-
-            boton.setAttribute(
-                'fill',
-                boton.getAttribute('data-color-inactivo')
-            );
-        }
-
-        /* =========================
-           PERDER
-        ========================== */
-
-        perderJuego(reproducirSonido = true) {
-
-            clearTimeout(
-                this.inactividadTimeout
-            );
-
-            this.esperandoJugador = false;
-
-            this.procesandoClic = false;
-
-            this.resolverClic = null;
-
-            this.botones.forEach(b => {
-
-                b.setAttribute(
+                boton.setAttribute(
                     'fill',
-                    b.getAttribute('data-color-inactivo')
+                    boton.getAttribute(
+                        'data-color-activo'
+                    )
                 );
-            });
 
-            estadoJuego.textContent =
-                '❌ Error. Inténtalo de nuevo.';
+            } else {
 
-            estadoJuego.style.color = 'red';
-
-            ronda.textContent = 'Ronda: 1';
-
-            if (reproducirSonido) {
-
-                try {
-
-                    const errorAudio =
-                        this.sonidosBoton[4];
-
-                    errorAudio.currentTime = 0;
-
-                    errorAudio.play()
-                        .catch(() => { });
-
-                } catch (e) {}
+                boton.setAttribute(
+                    'fill',
+                    boton.getAttribute(
+                        'data-color-inactivo'
+                    )
+                );
             }
-
-            botonEmpezar.disabled = false;
         }
 
-        /* =========================
-           GANAR
-        ========================== */
+        reproducirSonido(indice) {
+
+            const audio =
+                this.sonidosBoton[indice];
+
+            if (audio) {
+
+                audio.currentTime = 0;
+
+                audio.play()
+                    .catch(() => {
+
+                        console.error(
+                            'Error al reproducir sonido.'
+                        );
+                    });
+            }
+        }
+
+        perderJuego() {
+
+            clearTimeout(this.inactividadTimeout);
+
+            this.limpiarEstado();
+
+            this.display.estadoJuego.textContent =
+                'Perdiste. Intenta de nuevo.';
+
+            this.display.estadoJuego.style.color =
+                'red';
+
+            this.display.ronda.style.display =
+                'none';
+
+            /* SONIDO ERROR */
+
+            const audio =
+                this.sonidosBoton[4];
+
+            if (audio) {
+
+                audio.pause();
+
+                audio.currentTime = 0;
+
+                const playPromise =
+                    audio.play();
+
+                if (playPromise !== undefined) {
+
+                    playPromise.catch(() => {});
+                }
+            }
+
+            this.display.botonEmpezar.disabled =
+                false;
+        }
 
         ganarJuego() {
 
-            clearTimeout(
-                this.inactividadTimeout
-            );
+            this.juegoTerminado = true;
 
-            this.esperandoJugador = false;
+            clearTimeout(this.inactividadTimeout);
 
-            this.procesandoClic = false;
-
-            this.resolverClic = null;
-
-            this.botones.forEach(b => {
-
-                b.setAttribute(
-                    'fill',
-                    b.getAttribute('data-color-inactivo')
-                );
-            });
+            this.limpiarEstado();
 
             const texto =
                 "¡FELICIDADES GANASTE!";
@@ -562,42 +493,48 @@ document.addEventListener('DOMContentLoaded', function () {
                 '#8B00FF'
             ];
 
-            estadoJuego.innerHTML = texto
-                .split('')
-                .map((letra, i) =>
+            this.display.estadoJuego.innerHTML =
+                texto.split('')
+                    .map((letra, i) => {
 
-                    `<span style="
-                        color:${colores[i % colores.length]};
-                        font-weight:bold
-                    ">
-                        ${letra === ' '
-                            ? '&nbsp;'
-                            : letra}
-                    </span>`
-                )
-                .join('');
+                        const color =
+                            colores[
+                                i % colores.length
+                            ];
 
-            ronda.textContent = 'Ronda: 1';
+                        return `
+                        <span style="
+                            color:${color};
+                            font-weight:bold;
+                            display:inline-block;
+                            animation:saltarLetra 0.5s ease ${i * 0.05}s infinite alternate;
+                        ">
+                            ${letra === ' '
+                                ? '&nbsp;'
+                                : letra}
+                        </span>
+                    `;
+                    })
+                    .join('');
 
-            try {
+            this.display.ronda.style.display =
+                'none';
 
-                const winAudio =
-                    this.sonidosBoton[5];
+            this.reproducirSonido(5);
 
-                winAudio.currentTime = 0;
+            this.display.botonEmpezar.disabled =
+                false;
 
-                winAudio.play()
-                    .catch(() => { });
+            let rafagasLanzadas = 0;
 
-            } catch (e) {}
+            const maxRafagas = 4;
 
-            botonEmpezar.disabled = false;
+            const lanzarRafaga = () => {
 
-            let rafagas = 0;
-
-            const lanzar = () => {
-
-                if (rafagas < 4) {
+                if (
+                    rafagasLanzadas <
+                    maxRafagas
+                ) {
 
                     confetti({
 
@@ -623,37 +560,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         }
                     });
 
-                    rafagas++;
+                    rafagasLanzadas++;
 
                     setTimeout(
-                        lanzar,
+                        lanzarRafaga,
                         1000
                     );
                 }
             };
 
-            lanzar();
+            lanzarRafaga();
         }
     }
 
-    /* =========================
-       INICIAR JUEGO
-    ========================== */
-
     new Quixo();
-
-    /* =========================
-       RECARGAR SI REGRESA
-    ========================== */
-
-    document.addEventListener(
-        "visibilitychange",
-        () => {
-
-            if (!document.hidden) {
-
-                location.reload();
-            }
-        }
-    );
 });
