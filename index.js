@@ -367,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
 
                     this.inactividadTimeout =
-                        setTimeout(async () => {
+                        setTimeout(() => {
 
                             try {
 
@@ -376,7 +376,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 errorAudio.currentTime = 0;
 
-                                await errorAudio.play();
+                                errorAudio.play()
+                                    .catch(() => {});
 
                             } catch (e) {}
 
