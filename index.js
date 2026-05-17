@@ -288,7 +288,35 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.inactividadTimeout =
                     setTimeout(() => {
 
-                        this.perderJuego();
+                        clearTimeout(this.inactividadTimeout);
+
+                        /* SONIDO SOLO PARA TIMEOUT */
+
+                        const timeoutAudio =
+                            new Audio(
+                                'https://quixo-sonidos.vercel.app/sounds_error.m4a'
+                            );
+
+                        timeoutAudio.volume = 1;
+
+                        timeoutAudio.play()
+                            .catch(() => {});
+
+                        /* MOSTRAR DERROTA */
+
+                        this.limpiarEstado();
+
+                        this.display.estadoJuego.textContent =
+                            'Perdiste. Intenta de nuevo.';
+
+                        this.display.estadoJuego.style.color =
+                            'red';
+
+                        this.display.ronda.style.display =
+                            'none';
+
+                        this.display.botonEmpezar.disabled =
+                            false;
 
                     }, 5000);
             }
@@ -296,120 +324,129 @@ document.addEventListener('DOMContentLoaded', function () {
 
         mostrarSecuencia() {
 
-    if (this.mostrandoSecuencia) return;
+            if (this.mostrandoSecuencia) return;
 
-    this.mostrandoSecuencia = true;
+            this.mostrandoSecuencia = true;
 
-    this.botonesBloqueados = true;
+            this.botonesBloqueados = true;
 
-    clearTimeout(this.inactividadTimeout);
+            clearTimeout(this.inactividadTimeout);
 
-    let indiceSecuencia = 0;
+            let indiceSecuencia = 0;
 
-    if (this.intervaloSecuencia) {
+            if (this.intervaloSecuencia) {
 
-        clearInterval(this.intervaloSecuencia);
+                clearInterval(this.intervaloSecuencia);
 
-        this.intervaloSecuencia = null;
-    }
+                this.intervaloSecuencia = null;
+            }
 
-    this.botones.forEach(boton => {
+            this.botones.forEach(boton => {
 
-        boton.setAttribute(
-            'fill',
-            boton.getAttribute(
-                'data-color-inactivo'
-            )
-        );
-    });
+                boton.setAttribute(
+                    'fill',
+                    boton.getAttribute(
+                        'data-color-inactivo'
+                    )
+                );
+            });
 
-    this.intervaloSecuencia = setInterval(() => {
+            this.intervaloSecuencia = setInterval(() => {
 
-        if (indiceSecuencia > 0) {
+                if (indiceSecuencia > 0) {
 
-            const anterior =
-                this.secuencia[
-                    indiceSecuencia - 1
-                ];
+                    const anterior =
+                        this.secuencia[
+                            indiceSecuencia - 1
+                        ];
 
-            this.alternarEstiloBoton(
-                this.botones[anterior],
-                false
-            );
-        }
+                    this.alternarEstiloBoton(
+                        this.botones[anterior],
+                        false
+                    );
+                }
 
-        if (
-            indiceSecuencia <=
-            this.rondaActual
-        ) {
-
-            const indiceColor =
-                this.secuencia[indiceSecuencia];
-
-            this.alternarEstiloBoton(
-                this.botones[indiceColor],
-                true
-            );
-
-            this.reproducirSonido(
-                indiceColor
-            );
-
-            indiceSecuencia++;
-
-        } else {
-
-            clearInterval(
-                this.intervaloSecuencia
-            );
-
-            this.intervaloSecuencia = null;
-
-            const ultimoIndice =
-                this.secuencia[
+                if (
+                    indiceSecuencia <=
                     this.rondaActual
-                ];
+                ) {
 
-            this.alternarEstiloBoton(
-                this.botones[ultimoIndice],
-                false
-            );
+                    const indiceColor =
+                        this.secuencia[indiceSecuencia];
 
-            this.botonesBloqueados = false;
+                    this.alternarEstiloBoton(
+                        this.botones[indiceColor],
+                        true
+                    );
 
-            this.posicionUsuario = 0;
+                    this.reproducirSonido(
+                        indiceColor
+                    );
 
-            this.mostrandoSecuencia = false;
+                    indiceSecuencia++;
 
-            /* AQUÍ ESTÁ EL CAMBIO */
+                } else {
 
-            this.inactividadTimeout =
-                setTimeout(() => {
+                    clearInterval(
+                        this.intervaloSecuencia
+                    );
 
-                    const audio =
-                        this.sonidosBoton[4];
+                    this.intervaloSecuencia = null;
 
-                    if (audio) {
+                    const ultimoIndice =
+                        this.secuencia[
+                            this.rondaActual
+                        ];
 
-                        audio.pause();
+                    this.alternarEstiloBoton(
+                        this.botones[ultimoIndice],
+                        false
+                    );
 
-                        audio.currentTime = 0;
+                    this.botonesBloqueados = false;
 
-                        audio.play()
-                            .catch(() => {});
-                    }
+                    this.posicionUsuario = 0;
 
-                    setTimeout(() => {
+                    this.mostrandoSecuencia = false;
 
-                        this.perderJuego();
+                    this.inactividadTimeout =
+                        setTimeout(() => {
 
-                    }, 50);
+                            clearTimeout(this.inactividadTimeout);
 
-                }, 5000);
+                            /* SONIDO SOLO PARA TIMEOUT */
+
+                            const timeoutAudio =
+                                new Audio(
+                                    'https://quixo-sonidos.vercel.app/sounds_error.m4a'
+                                );
+
+                            timeoutAudio.volume = 1;
+
+                            timeoutAudio.play()
+                                .catch(() => {});
+
+                            /* MOSTRAR DERROTA */
+
+                            this.limpiarEstado();
+
+                            this.display.estadoJuego.textContent =
+                                'Perdiste. Intenta de nuevo.';
+
+                            this.display.estadoJuego.style.color =
+                                'red';
+
+                            this.display.ronda.style.display =
+                                'none';
+
+                            this.display.botonEmpezar.disabled =
+                                false;
+
+                        }, 5000);
+                }
+
+            }, this.velocidad);
         }
-
-    }, this.velocidad);
-}
 
         alternarEstiloBoton(boton, activar) {
 
@@ -467,25 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.display.ronda.style.display =
                 'none';
 
-            /* SONIDO ERROR */
-
-            const audio =
-                this.sonidosBoton[4];
-
-            if (audio) {
-
-                audio.pause();
-
-                audio.currentTime = 0;
-
-                const playPromise =
-                    audio.play();
-
-                if (playPromise !== undefined) {
-
-                    playPromise.catch(() => {});
-                }
-            }
+            this.reproducirSonido(4);
 
             this.display.botonEmpezar.disabled =
                 false;
