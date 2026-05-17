@@ -296,101 +296,120 @@ document.addEventListener('DOMContentLoaded', function () {
 
         mostrarSecuencia() {
 
-            if (this.mostrandoSecuencia) return;
+    if (this.mostrandoSecuencia) return;
 
-            this.mostrandoSecuencia = true;
+    this.mostrandoSecuencia = true;
 
-            this.botonesBloqueados = true;
+    this.botonesBloqueados = true;
 
-            clearTimeout(this.inactividadTimeout);
+    clearTimeout(this.inactividadTimeout);
 
-            let indiceSecuencia = 0;
+    let indiceSecuencia = 0;
 
-            if (this.intervaloSecuencia) {
+    if (this.intervaloSecuencia) {
 
-                clearInterval(this.intervaloSecuencia);
+        clearInterval(this.intervaloSecuencia);
 
-                this.intervaloSecuencia = null;
-            }
+        this.intervaloSecuencia = null;
+    }
 
-            this.botones.forEach(boton => {
+    this.botones.forEach(boton => {
 
-                boton.setAttribute(
-                    'fill',
-                    boton.getAttribute(
-                        'data-color-inactivo'
-                    )
-                );
-            });
+        boton.setAttribute(
+            'fill',
+            boton.getAttribute(
+                'data-color-inactivo'
+            )
+        );
+    });
 
-            this.intervaloSecuencia = setInterval(() => {
+    this.intervaloSecuencia = setInterval(() => {
 
-                if (indiceSecuencia > 0) {
+        if (indiceSecuencia > 0) {
 
-                    const anterior =
-                        this.secuencia[
-                            indiceSecuencia - 1
-                        ];
+            const anterior =
+                this.secuencia[
+                    indiceSecuencia - 1
+                ];
 
-                    this.alternarEstiloBoton(
-                        this.botones[anterior],
-                        false
-                    );
-                }
-
-                if (
-                    indiceSecuencia <=
-                    this.rondaActual
-                ) {
-
-                    const indiceColor =
-                        this.secuencia[indiceSecuencia];
-
-                    this.alternarEstiloBoton(
-                        this.botones[indiceColor],
-                        true
-                    );
-
-                    this.reproducirSonido(
-                        indiceColor
-                    );
-
-                    indiceSecuencia++;
-
-                } else {
-
-                    clearInterval(
-                        this.intervaloSecuencia
-                    );
-
-                    this.intervaloSecuencia = null;
-
-                    const ultimoIndice =
-                        this.secuencia[
-                            this.rondaActual
-                        ];
-
-                    this.alternarEstiloBoton(
-                        this.botones[ultimoIndice],
-                        false
-                    );
-
-                    this.botonesBloqueados = false;
-
-                    this.posicionUsuario = 0;
-
-                    this.mostrandoSecuencia = false;
-
-                    this.inactividadTimeout =
-                        setTimeout(() => {
-
-                            this.perderJuego();
-
-                        }, 5000);
-                }
-
-            }, this.velocidad);
+            this.alternarEstiloBoton(
+                this.botones[anterior],
+                false
+            );
         }
+
+        if (
+            indiceSecuencia <=
+            this.rondaActual
+        ) {
+
+            const indiceColor =
+                this.secuencia[indiceSecuencia];
+
+            this.alternarEstiloBoton(
+                this.botones[indiceColor],
+                true
+            );
+
+            this.reproducirSonido(
+                indiceColor
+            );
+
+            indiceSecuencia++;
+
+        } else {
+
+            clearInterval(
+                this.intervaloSecuencia
+            );
+
+            this.intervaloSecuencia = null;
+
+            const ultimoIndice =
+                this.secuencia[
+                    this.rondaActual
+                ];
+
+            this.alternarEstiloBoton(
+                this.botones[ultimoIndice],
+                false
+            );
+
+            this.botonesBloqueados = false;
+
+            this.posicionUsuario = 0;
+
+            this.mostrandoSecuencia = false;
+
+            /* AQUÍ ESTÁ EL CAMBIO */
+
+            this.inactividadTimeout =
+                setTimeout(() => {
+
+                    const audio =
+                        this.sonidosBoton[4];
+
+                    if (audio) {
+
+                        audio.pause();
+
+                        audio.currentTime = 0;
+
+                        audio.play()
+                            .catch(() => {});
+                    }
+
+                    setTimeout(() => {
+
+                        this.perderJuego();
+
+                    }, 50);
+
+                }, 5000);
+        }
+
+    }, this.velocidad);
+}
 
         alternarEstiloBoton(boton, activar) {
 
