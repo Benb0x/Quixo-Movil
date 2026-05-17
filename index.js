@@ -1,11 +1,22 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    const audioPermissionModal = document.getElementById("audioPermissionModal");
-    const acceptAudioButton = document.getElementById("acceptAudio");
-    const botonEmpezar = document.getElementById("botonEmpezar");
-    const estadoJuego = document.getElementById("estadoJuego");
-    const ronda = document.getElementById("ronda");
-    const botonesJuego = document.querySelectorAll("#grupoInteractivo use");
+    const audioPermissionModal =
+        document.getElementById("audioPermissionModal");
+
+    const acceptAudioButton =
+        document.getElementById("acceptAudio");
+
+    const botonEmpezar =
+        document.getElementById("botonEmpezar");
+
+    const estadoJuego =
+        document.getElementById("estadoJuego");
+
+    const ronda =
+        document.getElementById("ronda");
+
+    const botonesJuego =
+        document.querySelectorAll("#grupoInteractivo use");
 
     const mensajesPositivos = [
         "¡Bien hecho!",
@@ -15,22 +26,25 @@ document.addEventListener('DOMContentLoaded', function () {
         "¡Continúa!"
     ];
 
-    acceptAudioButton.addEventListener('click', function () {
+    /* =========================
+       ACTIVAR AUDIO
+    ========================== */
 
-        const audio = new Audio(
-            'https://quixo-sonidos.vercel.app/sounds_1.m4a'
-        );
+    acceptAudioButton.addEventListener('click', async function () {
 
-        audio.play()
-            .then(() => {
+        try {
 
-                audioPermissionModal.style.display = 'none';
+            const audio = new Audio(
+                'https://quixo-sonidos.vercel.app/sounds_1.m4a'
+            );
 
-            })
-            .catch(() => {
+            audio.volume = 1;
 
-                console.error("Error al habilitar el sonido.");
-            });
+            await audio.play();
+
+        } catch (e) {}
+
+        audioPermissionModal.style.display = 'none';
     });
 
     class Quixo {
@@ -38,30 +52,31 @@ document.addEventListener('DOMContentLoaded', function () {
         constructor() {
 
             this.rondaActual = 0;
+
             this.posicionUsuario = 0;
+
             this.secuencia = [];
+
             this.velocidad = 1000;
+
             this.botonesBloqueados = true;
-            this.sonidosBoton = [];
+
             this.inactividadTimeout = null;
+
             this.juegoTerminado = false;
 
             this.mostrandoSecuencia = false;
+
             this.intervaloSecuencia = null;
 
             this.display = {
+
                 botonEmpezar,
                 ronda,
                 estadoJuego
             };
 
-            this.cargarSonidos();
-            this.iniciar();
-        }
-
-        cargarSonidos() {
-
-            const sonidos = [
+            this.urlsSonidos = [
 
                 'https://quixo-sonidos.vercel.app/sounds_1.m4a',
                 'https://quixo-sonidos.vercel.app/sounds_2.m4a',
@@ -71,16 +86,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 'https://quixo-sonidos.vercel.app/win.m4a'
             ];
 
-            sonidos.forEach((sonido, indice) => {
-
-                const audio = new Audio(sonido);
-
-                audio.preload = "auto";
-                audio.crossOrigin = 'anonymous';
-
-                this.sonidosBoton[indice] = audio;
-            });
+            this.iniciar();
         }
+
+        /* =========================
+           INICIAR
+        ========================== */
 
         iniciar() {
 
@@ -101,23 +112,51 @@ document.addEventListener('DOMContentLoaded', function () {
                     boton.getAttribute('data-color-inactivo')
                 );
 
-                boton.addEventListener('click', (event) => {
+                boton.addEventListener(
+                    'click',
+                    (event) => {
 
-                    if (
-                        !this.botonesBloqueados &&
-                        !this.mostrandoSecuencia
-                    ) {
+                        if (
+                            !this.botonesBloqueados &&
+                            !this.mostrandoSecuencia
+                        ) {
 
-                        const indice =
-                            this.botones.indexOf(
-                                event.currentTarget
-                            );
+                            const indice =
+                                this.botones.indexOf(
+                                    event.currentTarget
+                                );
 
-                        this.validarColorElegido(indice);
+                            this.validarColorElegido(indice);
+                        }
                     }
-                });
+                );
             });
         }
+
+        /* =========================
+           SONIDOS
+        ========================== */
+
+        reproducirSonido(indice) {
+
+            try {
+
+                const audio =
+                    new Audio(this.urlsSonidos[indice]);
+
+                audio.preload = "auto";
+
+                audio.volume = 1;
+
+                audio.play()
+                    .catch(() => { });
+
+            } catch (e) {}
+        }
+
+        /* =========================
+           GENERAR SECUENCIA
+        ========================== */
 
         generarSecuenciaAleatoria(longitud) {
 
@@ -125,14 +164,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             for (let i = 0; i < longitud; i++) {
 
-                const colorAleatorio =
-                    Math.floor(Math.random() * 4);
-
-                secuencia.push(colorAleatorio);
+                secuencia.push(
+                    Math.floor(Math.random() * 4)
+                );
             }
 
             return secuencia;
         }
+
+        /* =========================
+           REINICIAR
+        ========================== */
 
         reiniciarJuego() {
 
@@ -144,8 +186,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.generarSecuenciaAleatoria(10);
 
             this.rondaActual = 0;
+
             this.posicionUsuario = 0;
+
             this.botonesBloqueados = true;
+
             this.mostrandoSecuencia = false;
 
             this.display.estadoJuego.textContent = '';
@@ -160,6 +205,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.mostrarSecuencia();
         }
+
+        /* =========================
+           LIMPIAR ESTADO
+        ========================== */
 
         limpiarEstado() {
 
@@ -178,23 +227,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             this.posicionUsuario = 0;
 
-            this.rondaActual = 0;
-
             if (this.botones) {
 
                 this.botones.forEach(boton => {
 
                     boton.setAttribute(
                         'fill',
-                        boton.getAttribute(
-                            'data-color-inactivo'
-                        )
+                        boton.getAttribute('data-color-inactivo')
                     );
                 });
             }
         }
 
-        actualizarEstado(mensaje, ronda) {
+        /* =========================
+           ESTADO
+        ========================== */
+
+        actualizarEstado(mensaje, rondaActual) {
 
             const mensajePositivo =
                 mensajesPositivos[
@@ -205,11 +254,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 ];
 
             this.display.estadoJuego.textContent =
-                `${mensajePositivo} Siguiente ronda: ${ronda + 1}`;
+                `${mensajePositivo} Siguiente ronda: ${rondaActual + 1}`;
 
             this.display.estadoJuego.style.display =
                 'block';
+
+            this.display.ronda.textContent =
+                `Ronda: ${rondaActual + 1}`;
+
+            this.display.ronda.style.display =
+                'block';
         }
+
+        /* =========================
+           VALIDAR CLICK
+        ========================== */
 
         validarColorElegido(indice) {
 
@@ -259,9 +318,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         setTimeout(() => {
 
-                            if (
-                                !this.mostrandoSecuencia
-                            ) {
+                            if (!this.mostrandoSecuencia) {
 
                                 this.mostrarSecuencia();
                             }
@@ -288,39 +345,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 this.inactividadTimeout =
                     setTimeout(() => {
 
-                        clearTimeout(this.inactividadTimeout);
-
-                        /* SONIDO SOLO PARA TIMEOUT */
-
-                        const timeoutAudio =
-                            new Audio(
-                                'https://quixo-sonidos.vercel.app/sounds_error.m4a'
-                            );
-
-                        timeoutAudio.volume = 1;
-
-                        timeoutAudio.play()
-                            .catch(() => {});
-
-                        /* MOSTRAR DERROTA */
-
-                        this.limpiarEstado();
-
-                        this.display.estadoJuego.textContent =
-                            'Perdiste. Intenta de nuevo.';
-
-                        this.display.estadoJuego.style.color =
-                            'red';
-
-                        this.display.ronda.style.display =
-                            'none';
-
-                        this.display.botonEmpezar.disabled =
-                            false;
+                        this.perderJuego();
 
                     }, 5000);
             }
         }
+
+        /* =========================
+           MOSTRAR SECUENCIA
+        ========================== */
 
         mostrarSecuencia() {
 
@@ -345,9 +378,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 boton.setAttribute(
                     'fill',
-                    boton.getAttribute(
-                        'data-color-inactivo'
-                    )
+                    boton.getAttribute('data-color-inactivo')
                 );
             });
 
@@ -356,9 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (indiceSecuencia > 0) {
 
                     const anterior =
-                        this.secuencia[
-                            indiceSecuencia - 1
-                        ];
+                        this.secuencia[indiceSecuencia - 1];
 
                     this.alternarEstiloBoton(
                         this.botones[anterior],
@@ -379,9 +408,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         true
                     );
 
-                    this.reproducirSonido(
-                        indiceColor
-                    );
+                    this.reproducirSonido(indiceColor);
 
                     indiceSecuencia++;
 
@@ -394,9 +421,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.intervaloSecuencia = null;
 
                     const ultimoIndice =
-                        this.secuencia[
-                            this.rondaActual
-                        ];
+                        this.secuencia[this.rondaActual];
 
                     this.alternarEstiloBoton(
                         this.botones[ultimoIndice],
@@ -412,35 +437,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     this.inactividadTimeout =
                         setTimeout(() => {
 
-                            clearTimeout(this.inactividadTimeout);
-
-                            /* SONIDO SOLO PARA TIMEOUT */
-
-                            const timeoutAudio =
-                                new Audio(
-                                    'https://quixo-sonidos.vercel.app/sounds_error.m4a'
-                                );
-
-                            timeoutAudio.volume = 1;
-
-                            timeoutAudio.play()
-                                .catch(() => {});
-
-                            /* MOSTRAR DERROTA */
-
-                            this.limpiarEstado();
-
-                            this.display.estadoJuego.textContent =
-                                'Perdiste. Intenta de nuevo.';
-
-                            this.display.estadoJuego.style.color =
-                                'red';
-
-                            this.display.ronda.style.display =
-                                'none';
-
-                            this.display.botonEmpezar.disabled =
-                                false;
+                            this.perderJuego();
 
                         }, 5000);
                 }
@@ -448,46 +445,25 @@ document.addEventListener('DOMContentLoaded', function () {
             }, this.velocidad);
         }
 
+        /* =========================
+           COLORES BOTÓN
+        ========================== */
+
         alternarEstiloBoton(boton, activar) {
 
-            if (activar) {
+            boton.setAttribute(
 
-                boton.setAttribute(
-                    'fill',
-                    boton.getAttribute(
-                        'data-color-activo'
-                    )
-                );
+                'fill',
 
-            } else {
-
-                boton.setAttribute(
-                    'fill',
-                    boton.getAttribute(
-                        'data-color-inactivo'
-                    )
-                );
-            }
+                activar
+                    ? boton.getAttribute('data-color-activo')
+                    : boton.getAttribute('data-color-inactivo')
+            );
         }
 
-        reproducirSonido(indice) {
-
-            const audio =
-                this.sonidosBoton[indice];
-
-            if (audio) {
-
-                audio.currentTime = 0;
-
-                audio.play()
-                    .catch(() => {
-
-                        console.error(
-                            'Error al reproducir sonido.'
-                        );
-                    });
-            }
-        }
+        /* =========================
+           PERDER
+        ========================== */
 
         perderJuego() {
 
@@ -496,7 +472,7 @@ document.addEventListener('DOMContentLoaded', function () {
             this.limpiarEstado();
 
             this.display.estadoJuego.textContent =
-                'Perdiste. Intenta de nuevo.';
+                '❌ Perdiste. Intenta de nuevo.';
 
             this.display.estadoJuego.style.color =
                 'red';
@@ -504,11 +480,17 @@ document.addEventListener('DOMContentLoaded', function () {
             this.display.ronda.style.display =
                 'none';
 
+            /* SONIDO ERROR */
+
             this.reproducirSonido(4);
 
             this.display.botonEmpezar.disabled =
                 false;
         }
+
+        /* =========================
+           GANAR
+        ========================== */
 
         ganarJuego() {
 
@@ -532,15 +514,12 @@ document.addEventListener('DOMContentLoaded', function () {
             ];
 
             this.display.estadoJuego.innerHTML =
-                texto.split('')
-                    .map((letra, i) => {
+                texto.split('').map((letra, i) => {
 
-                        const color =
-                            colores[
-                                i % colores.length
-                            ];
+                    const color =
+                        colores[i % colores.length];
 
-                        return `
+                    return `
                         <span style="
                             color:${color};
                             font-weight:bold;
@@ -552,8 +531,7 @@ document.addEventListener('DOMContentLoaded', function () {
                                 : letra}
                         </span>
                     `;
-                    })
-                    .join('');
+                }).join('');
 
             this.display.ronda.style.display =
                 'none';
@@ -563,16 +541,15 @@ document.addEventListener('DOMContentLoaded', function () {
             this.display.botonEmpezar.disabled =
                 false;
 
+            /* CONFETI */
+
             let rafagasLanzadas = 0;
 
             const maxRafagas = 4;
 
             const lanzarRafaga = () => {
 
-                if (
-                    rafagasLanzadas <
-                    maxRafagas
-                ) {
+                if (rafagasLanzadas < maxRafagas) {
 
                     confetti({
 
@@ -611,5 +588,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    /* =========================
+       INICIAR JUEGO
+    ========================== */
+
     new Quixo();
+
+    /* =========================
+       RECARGAR AL VOLVER
+    ========================== */
+
+    document.addEventListener(
+        "visibilitychange",
+        () => {
+
+            if (!document.hidden) {
+
+                location.reload();
+            }
+        }
+    );
 });
