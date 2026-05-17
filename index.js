@@ -367,11 +367,22 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
 
                     this.inactividadTimeout =
-                        setTimeout(() => {
+                        setTimeout(async () => {
+
+                            try {
+
+                                const errorAudio =
+                                    this.sonidosBoton[4];
+
+                                errorAudio.currentTime = 0;
+
+                                await errorAudio.play();
+
+                            } catch (e) {}
 
                             limpiar();
 
-                            this.perderJuego();
+                            this.perderJuego(false);
 
                             resolve(false);
 
@@ -393,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         limpiar();
 
-                        this.perderJuego();
+                        this.perderJuego(true);
 
                         resolve(false);
 
@@ -468,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
            PERDER
         ========================== */
 
-        perderJuego() {
+        perderJuego(reproducirSonido = true) {
 
             clearTimeout(
                 this.inactividadTimeout
@@ -495,17 +506,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ronda.textContent = 'Ronda: 1';
 
-            try {
+            if (reproducirSonido) {
 
-                const errorAudio =
-                    this.sonidosBoton[4];
+                try {
 
-                errorAudio.currentTime = 0;
+                    const errorAudio =
+                        this.sonidosBoton[4];
 
-                errorAudio.play()
-                    .catch(() => { });
+                    errorAudio.currentTime = 0;
 
-            } catch (e) {}
+                    errorAudio.play()
+                        .catch(() => { });
+
+                } catch (e) {}
+            }
 
             botonEmpezar.disabled = false;
         }
