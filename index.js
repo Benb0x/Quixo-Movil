@@ -1,152 +1,124 @@
 document.addEventListener('DOMContentLoaded', function () {
 
-    const audioPermissionModal =
-        document.getElementById("audioPermissionModal");
+    const audioPermissionModal = document.getElementById("audioPermissionModal");
+    const acceptAudioButton = document.getElementById("acceptAudio");
+    const botonEmpezar = document.getElementById("botonEmpezar");
 
-    const acceptAudioButton =
-        document.getElementById("acceptAudio");
+    // BOTONES DEL JUEGO
+    const botonesJuego = document.querySelectorAll(".interactivo");
 
-    const botonEmpezar =
-        document.getElementById("botonEmpezar");
-
-    const estadoJuego =
-        document.getElementById("estadoJuego");
-
-    const ronda =
-        document.getElementById("ronda");
-
-    const botonesJuego =
-        document.querySelectorAll("#grupoInteractivo use");
+    const estadoJuego = document.getElementById("estadoJuego");
+    const ronda = document.getElementById("ronda");
 
     let nivelSeleccionado = 'facil';
 
-    /* =========================
-       SELECCIÓN DE NIVEL
-    ========================== */
+    // =========================
+    // SELECCIÓN DE NIVELES
+    // =========================
 
-    document.querySelectorAll('.nivel-item')
-        .forEach(item => {
+    document.querySelectorAll('.nivel-item').forEach(item => {
 
-            item.addEventListener('click', function (e) {
+        item.addEventListener('click', function (e) {
 
-                e.preventDefault();
+            e.preventDefault();
 
-                nivelSeleccionado =
-                    this.getAttribute('data-nivel');
+            nivelSeleccionado = this.getAttribute('data-nivel');
 
-                const textos = {
+            const textos = {
+                facil: '1 🟢 Fácil — Cabalgata inicia',
+                medio: '2 🟡 Medio — Aventuras en Compañía',
+                dificil: '3 🔴 Difícil — Solo para idealistas'
+            };
 
-                    facil:
-                        '1 🟢 Fácil — Normal',
-
-                    medio:
-                        '2 🟡 Medio — Rápido',
-
-                    dificil:
-                        '3 🔴 Difícil — ¡Super Veloz!'
-                };
-
-                document.getElementById('dropdownNivel')
-                    .textContent =
-                    textos[nivelSeleccionado];
-            });
+            document.getElementById('dropdownNivel').textContent =
+                textos[nivelSeleccionado];
         });
-
-    /* =========================
-       PERMISOS AUDIO
-    ========================== */
-
-    acceptAudioButton.addEventListener('click', async function () {
-
-        try {
-
-            const audio = new Audio(
-                'https://quixo-sonidos.vercel.app/sounds_1.m4a'
-            );
-
-            audio.volume = 1.0;
-
-            await audio.play();
-
-        } catch (e) {}
-
-        audioPermissionModal.style.display = 'none';
     });
 
-    /* =========================
-       ESPERAR
-    ========================== */
+    // =========================
+    // ACTIVAR AUDIO
+    // =========================
+
+    acceptAudioButton.addEventListener('click', function () {
+
+        const audio = new Audio(
+            'https://quixo-sonidos.vercel.app/sounds_1.m4a'
+        );
+
+        audio.play()
+            .then(() => {
+                audioPermissionModal.style.display = 'none';
+            })
+            .catch(() => { });
+    });
+
+    // =========================
+    // UTILIDAD ESPERA
+    // =========================
 
     const esperar = ms =>
         new Promise(res => setTimeout(res, ms));
 
-    /* =========================
-       CLASE QUIXO
-    ========================== */
+    // =========================
+    // CLASE PRINCIPAL
+    // =========================
 
     class Quixo {
 
         constructor() {
 
             this.secuencia = [];
-
             this.sonidosBoton = [];
 
             this.esperandoJugador = false;
-
-            this.procesandoClic = false;
 
             this.inactividadTimeout = null;
 
             this.resolverClic = null;
 
             this.tiempoEncendido = 350;
-
             this.gap = 100;
-
             this.tiempoEspera = 8000;
+
+            // COLA DE CLICKS
+            this.colaClicks = [];
+            this.procesandoCola = false;
 
             this.cargarSonidos();
 
             this.iniciar();
         }
 
-        /* =========================
-           CARGAR SONIDOS
-        ========================== */
+        // =========================
+        // SONIDOS
+        // =========================
 
         cargarSonidos() {
 
-            const sonidos = [
-    'sounds_1.m4a',
-    'sounds_2.m4a',
-    'sounds_3.m4a',
-    'sounds_4.m4a',
-    'sounds_error.m4a',
-    'win.m4a'
-];
+            const urls = [
+                'https://quixo-sonidos.vercel.app/sounds_1.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_2.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_3.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_4.m4a',
+                'https://quixo-sonidos.vercel.app/sounds_error.m4a',
+                'https://quixo-sonidos.vercel.app/win.m4a'
+            ];
+
             urls.forEach((url, i) => {
 
-                const audio = new Audio(url);
+                this.sonidosBoton[i] = new Audio(url);
 
-                audio.preload = "auto";
-
-                audio.volume = 1.0;
-
-                audio.load();
-
-                this.sonidosBoton[i] = audio;
+                this.sonidosBoton[i].preload = "auto";
             });
         }
 
-        /* =========================
-           INICIAR
-        ========================== */
+        // =========================
+        // INICIAR
+        // =========================
 
         iniciar() {
 
-            this.botones =
-                Array.from(botonesJuego);
+            this.botones = Array.from(botonesJuego);
 
             this.botones.forEach((boton, i) => {
 
@@ -157,10 +129,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 boton.addEventListener('click', () => {
 
-                    if (this.esperandoJugador) {
+                    if (!this.esperandoJugador) return;
 
-                        this.recibirClic(i);
-                    }
+                    this.colaClicks.push(i);
+
+                    this.procesarColaClicks();
                 });
             });
 
@@ -172,16 +145,16 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        /* =========================
-           CONFIGURACIÓN NIVELES
-        ========================== */
+        // =========================
+        // CONFIG NIVELES
+        // =========================
 
         obtenerConfigNivel() {
 
+            // 🟢 FÁCIL
             if (nivelSeleccionado === 'facil') {
 
                 return {
-
                     encendido: 420,
                     gap: 180,
                     espera: 8000,
@@ -189,67 +162,61 @@ document.addEventListener('DOMContentLoaded', function () {
                 };
             }
 
+            // 🟡 MEDIO
             if (nivelSeleccionado === 'medio') {
 
                 return {
-
-                    encendido: 260,
-                    gap: 110,
+                    encendido: 280,
+                    gap: 100,
                     espera: 6000,
-                    rondas: 12
+                    rondas: 10
                 };
             }
 
+            // 🔴 DIFÍCIL
             if (nivelSeleccionado === 'dificil') {
 
                 return {
-
-                    encendido: 160,
+                    encendido: 180,
                     gap: 70,
-                    espera: 4000,
-                    rondas: 18
+                    espera: 4500,
+                    rondas: 15
                 };
             }
 
             return {
-
                 encendido: 400,
                 gap: 150,
                 espera: 8000,
-                rondas: 8
+                rondas: 6
             };
         }
 
-        /* =========================
-           INICIAR JUEGO
-        ========================== */
+        // =========================
+        // INICIAR JUEGO
+        // =========================
 
         async iniciarJuego() {
 
-            const config =
-                this.obtenerConfigNivel();
+            const config = this.obtenerConfigNivel();
 
-            this.tiempoEncendido =
-                config.encendido;
+            this.tiempoEncendido = config.encendido;
+            this.gap = config.gap;
+            this.tiempoEspera = config.espera;
 
-            this.gap =
-                config.gap;
-
-            this.tiempoEspera =
-                config.espera;
-
+            // GENERAR SECUENCIA
             this.secuencia = Array.from(
-
                 { length: config.rondas },
-
                 () => Math.floor(Math.random() * 4)
             );
 
             this.esperandoJugador = false;
 
-            this.procesandoClic = false;
-
             this.resolverClic = null;
+
+            this.colaClicks = [];
+
+            this.procesandoCola = false;
 
             this.botones.forEach(b => {
 
@@ -259,9 +226,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 );
             });
 
-            ronda.style.display = 'block';
-
             ronda.textContent = 'Ronda: 1';
+
+            ronda.style.display = 'block';
 
             estadoJuego.textContent = '¡Atención!';
 
@@ -272,23 +239,21 @@ document.addEventListener('DOMContentLoaded', function () {
             await this.bucleJuego();
         }
 
-        /* =========================
-           BUCLE JUEGO
-        ========================== */
+        // =========================
+        // BUCLE PRINCIPAL
+        // =========================
 
         async bucleJuego() {
 
             for (let r = 0; r < this.secuencia.length; r++) {
 
-                ronda.textContent =
-                    `Ronda: ${r + 1}`;
+                ronda.textContent = `Ronda: ${r + 1}`;
 
-                estadoJuego.textContent =
-                    '👀 Mira...';
+                estadoJuego.textContent = '👀 Mira...';
 
-                estadoJuego.style.color =
-                    '#4682B4';
+                estadoJuego.style.color = '#4682B4';
 
+                // MOSTRAR SECUENCIA
                 for (let i = 0; i <= r; i++) {
 
                     await esperar(this.gap);
@@ -298,28 +263,26 @@ document.addEventListener('DOMContentLoaded', function () {
                     );
                 }
 
-                await esperar(250);
+                await esperar(300);
 
-                estadoJuego.textContent =
-                    '👉 Tu turno';
+                estadoJuego.textContent = '¡Tu turno!';
 
-                estadoJuego.style.color =
-                    '#28a745';
+                estadoJuego.style.color = '#28a745';
 
                 const resultado =
                     await this.turnoJugador(r);
 
                 if (!resultado) return;
 
-                await esperar(350);
+                await esperar(400);
             }
 
             this.ganarJuego();
         }
 
-        /* =========================
-           TURNO JUGADOR
-        ========================== */
+        // =========================
+        // TURNO JUGADOR
+        // =========================
 
         turnoJugador(rondaMax) {
 
@@ -329,26 +292,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 this.esperandoJugador = true;
 
-                this.procesandoClic = false;
-
                 const limpiar = () => {
 
                     this.esperandoJugador = false;
 
-                    this.procesandoClic = false;
-
                     this.resolverClic = null;
 
-                    clearTimeout(
-                        this.inactividadTimeout
-                    );
+                    clearTimeout(this.inactividadTimeout);
+
+                    this.colaClicks = [];
                 };
 
                 const resetTimer = () => {
 
-                    clearTimeout(
-                        this.inactividadTimeout
-                    );
+                    clearTimeout(this.inactividadTimeout);
 
                     this.inactividadTimeout =
                         setTimeout(() => {
@@ -366,14 +323,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 this.resolverClic = async (indice) => {
 
-                    clearTimeout(
-                        this.inactividadTimeout
-                    );
+                    clearTimeout(this.inactividadTimeout);
 
-                    if (
-                        indice !==
-                        this.secuencia[posicion]
-                    ) {
+                    // ERROR
+                    if (indice !== this.secuencia[posicion]) {
 
                         limpiar();
 
@@ -384,10 +337,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
 
+                    // ILUMINAR
                     await this.iluminarBoton(indice);
 
                     posicion++;
 
+                    // COMPLETÓ RONDA
                     if (posicion > rondaMax) {
 
                         limpiar();
@@ -402,67 +357,74 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        /* =========================
-           RECIBIR CLIC
-        ========================== */
+        // =========================
+        // PROCESAR COLA
+        // =========================
 
-        recibirClic(indice) {
+        async procesarColaClicks() {
 
-            if (this.resolverClic) {
+            if (this.procesandoCola) return;
 
-                this.resolverClic(indice);
+            this.procesandoCola = true;
+
+            while (this.colaClicks.length > 0) {
+
+                const indice = this.colaClicks.shift();
+
+                if (this.resolverClic) {
+
+                    await this.resolverClic(indice);
+                }
             }
+
+            this.procesandoCola = false;
         }
 
-        /* =========================
-           ILUMINAR BOTÓN
-        ========================== */
+        // =========================
+        // ILUMINAR BOTÓN
+        // =========================
 
         async iluminarBoton(indice) {
 
-            const boton =
-                this.botones[indice];
+            const boton = this.botones[indice];
 
+            const audio = this.sonidosBoton[indice];
+
+            // ENCENDER
             boton.setAttribute(
                 'fill',
                 boton.getAttribute('data-color-activo')
             );
 
-            try {
+            if (audio) {
 
-                const sonido =
-                    this.sonidosBoton[indice]
-                        .cloneNode();
+                audio.currentTime = 0;
 
-                sonido.volume = 1.0;
-
-                sonido.play().catch(() => { });
-
-            } catch (e) {}
+                audio.play().catch(() => { });
+            }
 
             await esperar(this.tiempoEncendido);
 
+            // APAGAR
             boton.setAttribute(
                 'fill',
                 boton.getAttribute('data-color-inactivo')
             );
         }
 
-        /* =========================
-           PERDER
-        ========================== */
+        // =========================
+        // PERDER
+        // =========================
 
         perderJuego() {
 
-            clearTimeout(
-                this.inactividadTimeout
-            );
+            clearTimeout(this.inactividadTimeout);
 
             this.esperandoJugador = false;
 
-            this.procesandoClic = false;
-
             this.resolverClic = null;
+
+            this.colaClicks = [];
 
             this.botones.forEach(b => {
 
@@ -473,45 +435,30 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             estadoJuego.textContent =
-                '❌ Perdiste. Inténtalo de nuevo.';
+                '❌ Error. Inténtalo de nuevo.';
 
             estadoJuego.style.color = 'red';
 
-            ronda.style.display = 'none';
+            ronda.textContent = 'Ronda: 1';
 
-            try {
-
-                const errorAudio = new Audio(
-                    'https://quixo-sonidos.vercel.app/sounds_error.m4a'
-                );
-
-                errorAudio.volume = 1.0;
-
-                errorAudio.load();
-
-                errorAudio.play()
-                    .catch(() => { });
-
-            } catch (e) {}
+            this.sonidosBoton[4].play().catch(() => { });
 
             botonEmpezar.disabled = false;
         }
 
-        /* =========================
-           GANAR
-        ========================== */
+        // =========================
+        // GANAR
+        // =========================
 
         ganarJuego() {
 
-            clearTimeout(
-                this.inactividadTimeout
-            );
+            clearTimeout(this.inactividadTimeout);
 
             this.esperandoJugador = false;
 
-            this.procesandoClic = false;
-
             this.resolverClic = null;
+
+            this.colaClicks = [];
 
             this.botones.forEach(b => {
 
@@ -521,11 +468,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 );
             });
 
-            const texto =
-                "¡FELICIDADES GANASTE!";
+            const texto = "¡FELICIDADES GANASTE!";
 
             const colores = [
-
                 '#FF0000',
                 '#FF7F00',
                 '#FFD700',
@@ -536,36 +481,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
             estadoJuego.innerHTML = texto
                 .split('')
-                .map((letra, i) =>
-
-                    `<span style="
+                .map((letra, i) => `
+                    <span style="
                         color:${colores[i % colores.length]};
                         font-weight:bold
                     ">
-                        ${letra === ' '
-                            ? '&nbsp;'
-                            : letra}
-                    </span>`
-                )
+                        ${letra === ' ' ? '&nbsp;' : letra}
+                    </span>
+                `)
                 .join('');
 
-            ronda.style.display = 'none';
+            ronda.textContent = 'Ronda: 1';
 
-            try {
-
-                const winAudio =
-                    this.sonidosBoton[5]
-                        .cloneNode();
-
-                winAudio.volume = 1.0;
-
-                winAudio.play()
-                    .catch(() => { });
-
-            } catch (e) {}
+            this.sonidosBoton[5].play().catch(() => { });
 
             botonEmpezar.disabled = false;
 
+            // CONFETTI
             let rafagas = 0;
 
             const lanzar = () => {
@@ -573,35 +505,22 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (rafagas < 4) {
 
                     confetti({
-
                         particleCount: 40,
                         angle: 60,
                         spread: 55,
-
-                        origin: {
-                            x: 0,
-                            y: 0.6
-                        }
+                        origin: { x: 0, y: 0.6 }
                     });
 
                     confetti({
-
                         particleCount: 40,
                         angle: 120,
                         spread: 55,
-
-                        origin: {
-                            x: 1,
-                            y: 0.6
-                        }
+                        origin: { x: 1, y: 0.6 }
                     });
 
                     rafagas++;
 
-                    setTimeout(
-                        lanzar,
-                        1000
-                    );
+                    setTimeout(lanzar, 1000);
                 }
             };
 
@@ -609,24 +528,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    /* =========================
-       INICIAR JUEGO
-    ========================== */
+    // =========================
+    // INICIAR JUEGO
+    // =========================
 
     new Quixo();
-
-    /* =========================
-       RECARGAR SI REGRESA
-    ========================== */
-
-    document.addEventListener(
-        "visibilitychange",
-        () => {
-
-            if (!document.hidden) {
-
-                location.reload();
-            }
-        }
-    );
 });
